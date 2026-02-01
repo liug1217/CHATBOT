@@ -3,127 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
-    <title>AI 專業助手</title>
+    <title>AI Core - 記憶進化版</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        :root { --main-blue: #007AFF; --ai-chat-bg: #FFFFFF; --user-chat-bg: #007AFF; }
-        body { margin: 0; background: #F2F2F7; display: flex; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        :root { --ai-blue: #007AFF; --glass: rgba(255, 255, 255, 0.8); }
+        body { margin: 0; background: #121212; display: flex; justify-content: center; font-family: -apple-system, sans-serif; }
+        .app-shell { width: 440px; height: 920px; background: #F2F2F7; display: flex; flex-direction: column; position: relative; overflow: hidden; }
         
-        .app-container {
-            width: 440px; height: 95vh; background: #FFF;
-            display: flex; flex-direction: column; position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-top: 2.5vh; border-radius: 20px; overflow: hidden;
-        }
-
-        /* 頂部標題列 - 給別人看的專業感 */
-        .app-header {
-            padding: 20px; background: white; border-bottom: 1px solid #EEE;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .status-dot { width: 8px; height: 8px; background: #4CD964; border-radius: 50%; display: inline-block; margin-right: 5px; }
-
-        .chat-window { flex: 1; padding: 20px; overflow-y: auto; background: #F9F9FB; display: flex; flex-direction: column; gap: 12px; }
+        /* 記憶狀態指示器 */
+        .memory-bar { background: #333; color: #aaa; padding: 5px 15px; font-size: 10px; display: flex; gap: 10px; }
         
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 16px; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .header { padding: 15px; background: white; text-align: center; font-weight: bold; border-bottom: 1px solid #ddd; }
+        .chat-area { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
-        .ai-msg { background: white; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .user-msg { background: var(--main-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        /* 氣泡樣式與動畫 */
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .ai { background: white; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .user { background: var(--ai-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        
+        @keyframes typing { from { opacity: 0.3; } to { opacity: 1; } }
+        .typing-dot { animation: typing 1s infinite alternate; }
 
-        .input-section { padding: 20px; background: white; display: flex; align-items: center; gap: 10px; border-top: 1px solid #EEE; }
-        #input-field { flex: 1; border: none; background: #E9E9EB; padding: 12px 20px; border-radius: 25px; font-size: 16px; outline: none; }
-        .send-icon { color: var(--main-blue); cursor: pointer; font-size: 30px; }
-
-        /* 矩形 1：底部功能選單 */
-        .bottom-nav { height: 80px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #EEE; }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; color: #8E8E93; font-size: 10px; text-decoration: none; }
-        .nav-btn.active { color: var(--main-blue); }
+        .input-box { padding: 15px; background: white; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
+        input { flex: 1; border: none; background: #eee; padding: 10px 18px; border-radius: 20px; outline: none; }
+        .send-btn { color: var(--ai-blue); cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="app-header">
-        <span style="font-weight: 600;">AI Core 專業版</span>
-        <span style="font-size: 12px; color: #8E8E93;"><span class="status-dot"></span>在線</span>
+<div class="app-shell">
+    <div class="memory-bar" id="mem-status">🧠 記憶層：空白 (Ready)</div>
+    <div class="header">AI CORE 2.0</div>
+    <div class="chat-area" id="chat-box">
+        <div class="msg ai">你好！我已加載上下文記憶模組。試著跟我聊天，我會記住你說過的話。✨</div>
     </div>
-
-    <div class="chat-window" id="chat-box">
-        <div class="msg ai-msg">您好，我是您的 AI 助手。請問今天有什麼可以幫您的？</div>
-    </div>
-
-    <div class="input-section">
-        <input type="text" id="input-field" placeholder="輸入訊息..." autocomplete="off">
-        <i class="material-icons send-icon" onclick="userSend()">send</i>
-    </div>
-
-    <div class="bottom-nav">
-        <a href="#" class="nav-btn active"><i class="material-icons">chat</i><span>聊天</span></a>
-        <a href="#" class="nav-btn"><i class="material-icons">explore</i><span>探索</span></a>
-        <a href="#" class="nav-btn"><i class="material-icons">person</i><span>設定</span></a>
+    <div class="input-box">
+        <input type="text" id="user-in" placeholder="輸入訊息..." onkeypress="if(event.key==='Enter') processInput()">
+        <i class="material-icons send-btn" onclick="processInput()">send</i>
     </div>
 </div>
 
 <script>
-    // 開發者定義的 Token 碼
-    const MY_VOCAB = {
-        "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021,
-        "我": 7573, "是": 3741, "專": 1174820, "業": 22174
+    // 你的專屬 Token 字典
+    const VOCAB = { "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, "我": 7573, "是": 3741, "專": 1174820, "業": 22174 };
+
+    // 擴展動態回覆池
+    const RESPONSE_POOLS = {
+        GREETING: ["哈囉！😊", "你好呀！很高興見到你。", "嗨！準備好開始工作了嗎？", "您好，AI 核心隨時待命。"],
+        TIME: ["早安！希望你有個充滿活力的一天。☕", "午安！需要休息一下嗎？", "晚安，願你有個好夢。🌙"],
+        EMO: ["聽起來你現在心情不錯呢！🌟", "別擔心，我會一直陪著你。💪", "哈哈，這太有趣了！😂"],
+        PRO: ["關於專業領域，我能為您提供深度的 Token 分析。", "我是 AI 專門構建的助手，穩定性是我的強項。"],
+        MEMORY_RECALL: ["剛才我們聊到「{0}」，要繼續深入嗎？", "你之前提到了「{0}」，這讓我想到..."]
     };
 
-    function userSend() {
-        const input = document.getElementById('input-field');
-        const text = input.value.trim();
-        if(!text) return;
+    // 上下文記憶堆棧
+    let chatHistory = [];
 
-        addBubble(text, 'user-msg');
+    function processInput() {
+        const input = document.getElementById('user-in');
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMsg(text, 'user');
         input.value = '';
 
-        // 核心邏輯：Token 化與數據回傳
-        processData(text);
+        // 1. Token 分析
+        let tokens = [];
+        for (let char of text) tokens.push(VOCAB[char] || 0);
+
+        // 2. 記憶更新：將使用者輸入推入歷史
+        chatHistory.push(text);
+        if (chatHistory.length > 5) chatHistory.shift();
+        document.getElementById('mem-status').innerText = `🧠 記憶層：已儲存 ${chatHistory.length} 條歷史`;
+
+        // 3. 生成邏輯 (結合上下文)
+        generateDynamicResponse(text, tokens);
     }
 
-    function processData(text) {
-        // 1. 生成 Token 流 (未知字標記為 0)
-        let tokenStream = [];
-        let unknownChars = [];
-        for (let char of text) {
-            if (MY_VOCAB[char]) {
-                tokenStream.push(MY_VOCAB[char]);
-            } else {
-                tokenStream.push(0);
-                unknownChars.push(char);
-            }
+    function generateDynamicResponse(text, tokens) {
+        let reply = "";
+        const now = new Date().getHours();
+
+        // 隨機 Emoji 注入
+        const emojis = ["✨", "🚀", "🤖", "💡"];
+        const randEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // A. 判斷是否為時間問候
+        if (text.includes("早") || (now < 10 && tokens.includes(8021))) {
+            reply = RESPONSE_POOLS.TIME[0];
+        } 
+        // B. 判斷是否觸發記憶回溯 (如果歷史中有提到過某個關鍵詞)
+        else if (chatHistory.length > 2 && Math.random() > 0.7) {
+            const oldTopic = chatHistory[chatHistory.length - 3];
+            reply = RESPONSE_POOLS.MEMORY_RECALL[0].replace("{0}", oldTopic);
+        }
+        // C. 基本問候 (隨機池)
+        else if (tokens.includes(36452) || tokens.includes(8021)) {
+            reply = RESPONSE_POOLS.GREETING[Math.floor(Math.random() * RESPONSE_POOLS.GREETING.length)];
+        }
+        // D. 專業/身份判斷
+        else if (tokens.includes(1174820)) {
+            reply = RESPONSE_POOLS.PRO[Math.floor(Math.random() * RESPONSE_POOLS.PRO.length)];
+        }
+        else {
+            reply = `我正在學習這段內容... 已記錄 Token 0 [${text.substring(0,3)}...] ${randEmoji}`;
         }
 
-        // 2. 模擬傳送到開發者後台 (傳到你這在看)
-        console.log("--- [開發者數據收集] ---");
-        console.log("來源文字:", text);
-        console.log("Token ID:", tokenStream);
-        console.log("待定義字元:", unknownChars);
-        console.log("-----------------------");
-
-        // 3. AI 的結合性回覆
-        setTimeout(() => {
-            let response = "";
-            // 如果全是 Token 0，給予學習中的模糊回覆
-            if (tokenStream.every(t => t === 0)) {
-                response = "這是一個很有深度的話題，我正在記錄並分析相關資訊以提供更精確的回答。";
-            } else if (tokenStream.includes(36452)) {
-                response = "你好！很高興能為您服務。";
-            } else {
-                response = "收到您的訊息，我會根據專業邏輯進行處理。";
-            }
-            addBubble(response, 'ai-msg');
-        }, 800);
+        // 模擬打字效果
+        setTimeout(() => addMsg(reply, 'ai'), 600);
     }
 
-    function addBubble(txt, type) {
+    function addMsg(txt, cl) {
         const box = document.getElementById('chat-box');
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerText = txt;
-        box.appendChild(div);
+        const d = document.createElement('div');
+        d.className = `msg ${cl}`;
+        d.innerText = txt;
+        box.appendChild(d);
         box.scrollTop = box.scrollHeight;
     }
 </script>
