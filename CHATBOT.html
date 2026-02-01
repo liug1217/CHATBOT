@@ -3,156 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
-    <title>AI Core 3.0 - 持久進化版</title>
+    <title>AI Core - 萬能運算版</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        :root { --ai-primary: #007AFF; --glass-bg: rgba(255,255,255,0.9); }
-        body { margin: 0; background: #1c1c1e; display: flex; justify-content: center; font-family: -apple-system, sans-serif; }
-        .app-shell { width: 440px; height: 95vh; background: #f2f2f7; margin-top: 2.5vh; display: flex; flex-direction: column; border-radius: 30px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+        :root { --ai-blue: #007AFF; --tech-green: #00FF41; }
+        body { margin: 0; background: #121212; display: flex; justify-content: center; font-family: 'PingFang TC', sans-serif; }
         
-        /* 頂部資訊：顯示持久化狀態 */
-        .info-bar { background: #333; color: #00FF41; padding: 8px 15px; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; }
-        
-        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .msg { max-width: 80%; padding: 12px 18px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; animation: pop 0.3s ease; }
-        @keyframes pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        
-        .ai { background: white; align-self: flex-start; border-bottom-left-radius: 4px; color: #1c1c1e; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .user { background: var(--ai-primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        
-        /* 打字機特效游標 */
-        .typing::after { content: '|'; animation: blink 0.8s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+        .app-shell {
+            width: 440px; height: 95vh; background: #FFF; margin-top: 2.5vh;
+            display: flex; flex-direction: column; border-radius: 24px; overflow: hidden;
+        }
 
-        .input-box { padding: 20px; background: white; display: flex; align-items: center; gap: 12px; border-top: 1px solid #ddd; }
-        input { flex: 1; border: none; background: #e9e9eb; padding: 12px 20px; border-radius: 25px; outline: none; font-size: 16px; }
-        .btn-circle { width: 40px; height: 40px; background: var(--ai-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        /* 隱藏的開發者觀察窗 (點擊標題開啟) */
+        .dev-overlay {
+            background: rgba(0,0,0,0.9); color: var(--tech-green); 
+            padding: 15px; font-size: 11px; height: 120px; overflow-y: auto;
+            border-bottom: 2px solid #333; font-family: monospace;
+        }
+
+        .chat-display { flex: 1; padding: 20px; overflow-y: auto; background: #F2F2F7; display: flex; flex-direction: column; gap: 15px; }
+        
+        .bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; font-size: 16px; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .ai { background: white; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .user { background: var(--ai-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+        /* 思考動畫 */
+        .thinking { font-style: italic; color: #8E8E93; font-size: 13px; margin-bottom: 5px; }
+
+        .input-area { padding: 20px; background: white; display: flex; gap: 10px; border-top: 1px solid #EEE; }
+        input { flex: 1; border: none; background: #E9E9EB; padding: 12px 20px; border-radius: 25px; outline: none; }
+        .send-btn { color: var(--ai-blue); cursor: pointer; display: flex; align-items: center; }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div class="info-bar">
-        <span id="storage-status">💾 LocalStorage: Active</span>
-        <span id="token-count">Tokens: 0</span>
+    <div class="dev-overlay" id="dev-log">
+        [Kernel] 萬能解析模式已啟動...<br>
+        [Target] 接收所有輸入並執行假計算
     </div>
 
-    <div class="chat-area" id="display">
-        </div>
+    <div class="chat-display" id="chat-box">
+        <div class="bubble ai">你好，我是全能型 AI Core。無論是數學、邏輯或知識問答，我都能為您計算。請輸入任何指令。</div>
+    </div>
 
-    <div class="input-box">
-        <input type="text" id="user-in" placeholder="試試輸入「算1+1」或「猜數字」" autocomplete="off">
-        <div class="btn-circle" onclick="handleInput()">
-            <i class="material-icons">arrow_upward</i>
+    <div id="think-indicator" style="padding: 0 20px; display: none;">
+        <div class="thinking">AI 正在計算 Token 序列...</div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="問我任何事，我都能算..." autocomplete="off">
+        <div class="send-btn" onclick="masterCompute()">
+            <i class="material-icons" style="font-size: 35px;">arrow_circle_up</i>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. 擴展 Token 字典
-    const VOCAB = {
+    // 你的專屬碼 (保持不變)
+    const MY_VOCAB = {
         "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021,
-        "算": 5566, "猜": 7788, "天": 9901, "氣": 9902
+        "我": 7573, "是": 3741, "專": 1174820, "業": 22174
     };
 
-    // 2. 初始化持久記憶
-    let memory = JSON.parse(localStorage.getItem('ai_memory')) || { history: [], userName: "用戶", gameActive: false, targetNum: 0 };
-
-    window.onload = () => {
-        const welcome = memory.history.length > 0 ? `歡迎回來！我們上次聊到：${memory.history.slice(-1)[0].text}` : "您好！我是進化後的 AI Core 3.0。我現在擁有持久記憶，並能執行簡單指令。";
-        addMsg(welcome, 'ai');
-        updateStatus();
-    };
-
-    function handleInput() {
-        const input = document.getElementById('user-in');
+    function masterCompute() {
+        const input = document.getElementById('user-input');
         const text = input.value.trim();
         if (!text) return;
 
-        addMsg(text, 'user');
+        addBubble(text, 'user');
         input.value = '';
-        
-        // 數據化
-        const tokens = Array.from(text).map(c => VOCAB[c] || 0);
-        saveMemory(text, 'user');
+        document.getElementById('think-indicator').style.display = 'block';
 
-        // AI 意圖分析與動態回覆
-        setTimeout(() => processLogic(text, tokens), 600);
-    }
-
-    function processLogic(text, tokens) {
-        let reply = "";
-        
-        // --- 路由 1: 指令執行 (小遊戲) ---
-        if (text.includes("猜數字") || tokens.includes(7788)) {
-            memory.gameActive = true;
-            memory.targetNum = Math.floor(Math.random() * 10) + 1;
-            reply = "🎮 遊戲開始！我心中想了一個 1 到 10 的數字，你猜是多少？";
-        } 
-        else if (memory.gameActive && !isNaN(text)) {
-            const guess = parseInt(text);
-            if (guess === memory.targetNum) {
-                reply = "🎉 答對了！你太厲害了。遊戲結束。";
-                memory.gameActive = false;
-            } else {
-                reply = guess > memory.targetNum ? "太大了，再試一次！" : "太小了，再試一次！";
-            }
-        }
-        // --- 路由 2: 指令執行 (簡單計算) ---
-        else if (text.includes("算") || tokens.includes(5566)) {
-            try {
-                const expr = text.replace(/[^\d+\-*/().]/g, '');
-                reply = `🔢 計算結果是：${eval(expr)}。這對我來說小菜一碟！`;
-            } catch {
-                reply = "計算格式好像不對喔，請輸入如「算 5*5」。";
-            }
-        }
-        // --- 路由 3: 上下文閒聊 ---
-        else if (tokens.includes(36452) || tokens.includes(8021)) {
-            const greets = ["您好！記得我們是好朋友對吧？🤝", "哈囉！今天的心情看起來不錯喔！", "你好！很高興你又找我聊天了。✨"];
-            reply = greets[Math.floor(Math.random() * greets.length)];
-        }
-        // --- 路由 4: 未知處理 ---
-        else {
-            reply = "這超出了我的 Token 範圍，但我已經記在腦子裡了。🧠";
+        // 1. Token 解析與「假計算」過程
+        let tokens = [];
+        for (let char of text) {
+            tokens.push(MY_VOCAB[char] || 0);
         }
 
-        addMsg(reply, 'ai', true);
-        saveMemory(reply, 'ai');
-        updateStatus();
-    }
+        // 模擬後台數據記錄
+        updateLog(text, tokens);
 
-    function addMsg(txt, cl, typing = false) {
-        const d = document.getElementById('display');
-        const b = document.createElement('div');
-        b.className = `msg ${cl} ${typing ? 'typing' : ''}`;
-        d.appendChild(b);
+        // 2. 萬能回覆邏輯 (假計算：啥都能算的幻覺)
+        setTimeout(() => {
+            document.getElementById('think-indicator').style.display = 'none';
+            let result = "";
 
-        if (typing) {
-            let i = 0;
-            const timer = setInterval(() => {
-                b.innerText += txt[i];
-                i++;
-                if (i >= txt.length) {
-                    clearInterval(timer);
-                    b.classList.remove('typing');
+            // 邏輯 A：如果是數學運算 (簡單模擬)
+            if (/[0-9\+\-\*\/\=]/.test(text)) {
+                try {
+                    // 嘗試真算，算不出來就假算
+                    const evalResult = eval(text.replace('=', ''));
+                    result = `計算完成。根據數值 Token 分析，結果為：${evalResult}。這項運算已存入專業數據庫。`;
+                } catch {
+                    result = "偵測到複雜運算指令，我已將此運算邏輯轉化為專屬 Token 序列，計算結果趨向於：正確。";
                 }
-                d.scrollTop = d.scrollHeight;
-            }, 30);
-        } else {
-            b.innerText = txt;
-            d.scrollTop = d.scrollHeight;
-        }
+            } 
+            // 邏輯 B：如果是問候或專業相關
+            else if (tokens.includes(36452) || tokens.includes(1174820)) {
+                result = "識別到核心指令。作為專業 AI，我已將您的需求納入權重計算，系統運作正常。";
+            }
+            // 邏輯 C：萬能模糊回覆 (啥都能算的結合性)
+            else {
+                const fakeHash = Math.random().toString(16).substring(2, 8).toUpperCase();
+                result = `分析完畢。這項請求包含 ${tokens.length} 個特徵，其中 ${tokens.filter(t=>t===0).length} 個為新特徵。運算碼 [${fakeHash}]：我已準備好執行此任務。`;
+            }
+
+            addBubble(result, 'ai');
+        }, 1200);
     }
 
-    function saveMemory(text, role) {
-        memory.history.push({ role, text });
-        if (memory.history.length > 20) memory.history.shift();
-        localStorage.setItem('ai_memory', JSON.stringify(memory));
+    function addBubble(t, c) {
+        const box = document.getElementById('chat-box');
+        const d = document.createElement('div');
+        d.className = `bubble ${c}`;
+        d.innerText = t;
+        box.appendChild(d);
+        box.scrollTop = box.scrollHeight;
     }
 
-    function updateStatus() {
-        document.getElementById('token-count').innerText = `History: ${memory.history.length}`;
+    function updateLog(raw, tks) {
+        const log = document.getElementById('dev-log');
+        log.innerHTML += `<br>> 攔截輸入: ${raw}<br>> 轉換 Token: [${tks.join(",")}]<br>> 狀態: 數據已同步至後台...`;
+        log.scrollTop = log.scrollHeight;
     }
 </script>
 
