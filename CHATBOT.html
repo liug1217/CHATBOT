@@ -3,118 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=440, height=956, user-scalable=no">
-    <title>AI Core - Chat Mode</title>
+    <title>AI Chat</title>
     <style>
-        :root {
-            --user-bg: #212121;
-            --ai-bg: #f7f7f8;
-            --text-main: #374151;
-            --bg: #ffffff;
-        }
-
-        body {
-            margin: 0; padding: 0; background: #333;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; font-family: -apple-system, system-ui, sans-serif;
-        }
-
-        /* 嚴格執行 440 x 956 框架 */
-        .app-container {
-            width: 440px; height: 956px;
-            background: var(--bg); display: flex; flex-direction: column;
-            position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.5);
-        }
-
-        /* 頂部導航 */
-        .nav-bar {
-            height: 60px; display: flex; align-items: center; justify-content: center;
-            border-bottom: 1px solid #ececf1; font-weight: 600; color: #444;
-            flex-shrink: 0;
-        }
-
-        /* 對話容器 */
-        .chat-area {
-            flex: 1; overflow-y: auto; padding: 20px 0;
-            display: flex; flex-direction: column; gap: 24px;
-            scrollbar-width: none; /* 隱藏滾動條 */
-        }
-        .chat-area::-webkit-scrollbar { display: none; }
-
-        /* 訊息氣泡 */
+        :root { --user-bg: #212121; --ai-bg: #f7f7f8; --text: #374151; }
+        body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, sans-serif; }
+        .app-container { width: 440px; height: 956px; background: #fff; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+        .nav-bar { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #eee; font-weight: 600; color: #444; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 20px 0; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
         .msg-row { display: flex; width: 100%; padding: 0 15px; box-sizing: border-box; }
         .msg-row.user { justify-content: flex-end; }
-        
-        .bubble {
-            max-width: 85%; padding: 12px 18px; font-size: 16px; line-height: 1.5;
-            word-wrap: break-word;
-        }
-        
-        .ai .bubble {
-            background: var(--ai-bg); color: var(--text-main);
-            border-radius: 18px 18px 18px 4px; border: 1px solid #e5e5e5;
-        }
-        
-        .user .bubble {
-            background: var(--user-bg); color: #fff;
-            border-radius: 18px 18px 4px 18px;
-        }
-
-        /* 底部輸入框 */
-        .input-zone {
-            padding: 20px; border-top: 1px solid #ececf1;
-            background: white; flex-shrink: 0;
-        }
-
-        .input-container {
-            display: flex; align-items: center; background: #fff;
-            border: 1px solid #d9d9e3; border-radius: 12px;
-            padding: 8px 12px; box-shadow: 0 0 10px rgba(0,0,0,0.05);
-        }
-
-        input {
-            flex: 1; border: none; outline: none; padding: 10px;
-            font-size: 16px; color: var(--text-main);
-        }
-
-        .send-btn {
-            width: 32px; height: 32px; background: #212121; color: white;
-            border: none; border-radius: 6px; display: flex;
-            align-items: center; justify-content: center; cursor: pointer;
-        }
-
-        .send-btn:disabled { background: #d9d9e3; }
-
-        .latency-hint {
-            text-align: center; font-size: 11px; color: #acacbe; margin-top: 10px;
-        }
+        .bubble { max-width: 85%; padding: 12px 18px; font-size: 16px; line-height: 1.5; }
+        .ai .bubble { background: var(--ai-bg); color: var(--text); border-radius: 18px 18px 18px 4px; border: 1px solid #e5e5e5; }
+        .user .bubble { background: var(--user-bg); color: #fff; border-radius: 18px 18px 4px 18px; }
+        .input-zone { padding: 20px; border-top: 1px solid #eee; background: #fff; }
+        .input-container { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 12px; padding: 8px 12px; }
+        input { flex: 1; border: none; outline: none; padding: 10px; font-size: 16px; }
+        .send-btn { width: 32px; height: 32px; background: #212121; color: white; border: none; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="nav-bar">AI Core 3.2</div>
-
+    <div class="nav-bar">AI 助手</div>
     <div id="chatArea" class="chat-area">
-        <div class="msg-row ai">
-            <div class="bubble">你好！我是你的 AI 助手。你可以隨意跟我聊天，或者讓我幫你計算。</div>
-        </div>
+        <div class="msg-row ai"><div class="bubble">你好！今天有什麼我可以幫你的嗎？</div></div>
     </div>
-
     <div class="input-zone">
         <div class="input-container">
             <input type="text" id="userInput" placeholder="傳送訊息..." autocomplete="off" onkeydown="if(event.key==='Enter') sendMessage()">
             <button class="send-btn" onclick="sendMessage()">↑</button>
         </div>
-        <div id="latency" class="latency-hint">回應速度：0ms</div>
     </div>
 </div>
 
 <script>
     const VOCAB = { "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, "專": 1174820, "業": 22174 };
-    const DECODER = { "36452": "哈", "1746,235": "囉", "12942": "你", "8021": "好", "7573": "我", "3741": "是" };
 
     function sendMessage() {
-        const start = performance.now();
         const input = document.getElementById('userInput');
         const text = input.value.trim();
         if (!text) return;
@@ -122,43 +47,48 @@
         addBubble(text, 'user');
         input.value = '';
 
-        // --- 核心邏輯處理 ---
-        
-        // 1. Token 解析
-        const inTokens = text.split('').map(c => VOCAB[c] || 0);
-        console.log("Tokens:", inTokens);
+        // 後台靜默運算 (使用者看不見)
+        const tokens = text.split('').map(c => VOCAB[c] || 0);
+        console.log("Internal Token Flow:", tokens);
 
-        // 2. 雙軌回覆 (Token 與 自然語言計算)
         let response = "";
 
-        // 自然語言計算邏輯
+        // 1. 口語化計算判斷
         const nums = text.match(/\d+(\.\d+)?/g);
         if (nums && nums.length >= 2 && (text.includes("算") || text.includes("加") || text.includes("跟") || text.includes("和"))) {
             const sum = nums.reduce((a, b) => parseFloat(a) + parseFloat(b));
-            response = `根據計算，${nums.join(' 與 ')} 的結果是 ${sum}。`;
+            response = `好的，計算結果是 ${sum}。`;
         } 
-        // 文字觸發 (你可以在這裡加「很多」)
-        else if (text.includes("早") || text.includes("安")) {
-            response = "早安！今天有什麼我可以幫你的嗎？";
+        // 2. 大量文字感性回覆 (你可以繼續增加)
+        else if (text.includes("哈囉") || text.includes("你好")) {
+            response = "你好啊！很高興見到你。";
         }
-        else if (text.includes("誰")) {
-            response = "我是 AI Core，一個基於 Token 運作的輕量化核心。";
+        else if (text.includes("你是誰")) {
+            response = "我是你的智慧助手，隨時準備幫你解決問題或進行運算。";
         }
-        else if (text.includes("厲害") || text.includes("棒")) {
-            response = "謝謝誇獎！我會繼續優化我的 Token 運算邏輯。";
+        else if (text.includes("專業")) {
+            response = "謝謝你的肯定！我會努力保持專業的服務品質。";
         }
-        else if (inTokens.includes(36452)) {
-            response = "你好哈囉！偵測到問候代碼 36452。";
+        else if (text.includes("謝謝") || text.includes("感謝")) {
+            response = "不客氣，這是我應該做的。還有其他需要幫忙的嗎？";
+        }
+        else if (text.includes("再見") || text.includes("拜拜")) {
+            response = "再見！祝你有個美好的一天，隨時歡迎回來。";
+        }
+        else if (text.includes("秘密")) {
+            response = "每個人都有自己的小秘密，我也會守護好我們之間的對話。";
+        }
+        else if (text.includes("笨") || text.includes("壞")) {
+            response = "抱歉讓你感到不愉快了，我會持續學習改進。";
+        }
+        else if (text.includes("天氣")) {
+            response = "我目前沒辦法幫你查實時天氣，建議你看看窗外或查看氣象 App 喔！";
         }
         else {
-            response = "我收到了你的訊息。目前此內容尚未完全定義 Token，但我已經將它記錄下來了。";
+            response = "我明白你的意思了。雖然這部分我還在學習，但我會記下來。";
         }
 
-        // --- 模擬 AI 思考感 ---
-        setTimeout(() => {
-            addBubble(response, 'ai');
-            document.getElementById('latency').innerText = `回應速度：${(performance.now() - start).toFixed(2)}ms`;
-        }, 300);
+        setTimeout(() => addBubble(response, 'ai'), 400);
     }
 
     function addBubble(text, type) {
@@ -170,6 +100,5 @@
         area.scrollTop = area.scrollHeight;
     }
 </script>
-
 </body>
 </html>
