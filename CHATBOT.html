@@ -1,151 +1,209 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
-<title>AI Core - 全功能用戶版</title>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<style>
-:root { --ai-blue: #007AFF; --bg-light: #F2F2F7; --bg-dark: #121212; }
-body { margin:0; display:flex; justify-content:center; font-family:-apple-system, sans-serif; background:var(--bg-dark); }
-.app-shell { width:440px; height:95vh; background:#FFF; margin-top:2.5vh; display:flex; flex-direction:column; border-radius:24px; overflow:hidden; }
-.header { padding:15px; text-align:center; font-weight:bold; border-bottom:1px solid #ddd; }
-.chat-box { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; background:var(--bg-light); }
-.msg { max-width:85%; padding:12px 18px; border-radius:20px; font-size:15px; line-height:1.5; word-wrap:break-word; }
-.user { background:var(--ai-blue); color:white; align-self:flex-end; border-bottom-right-radius:4px; }
-.ai { background:white; align-self:flex-start; border-bottom-left-radius:4px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
-.thinking { font-style:italic; color:#666; font-size:13px; margin-bottom:5px; }
-.input-area { padding:15px; background:white; display:flex; gap:10px; border-top:1px solid #ddd; }
-input { flex:1; border:none; background:#eee; padding:12px 18px; border-radius:25px; outline:none; font-size:15px; }
-.send-btn { color:var(--ai-blue); cursor:pointer; display:flex; align-items:center; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
+    <title>AI Core Professional Edition</title>
+    <style>
+        :root { 
+            --ai-purple: #5856D6; 
+            --system-bg: #FFFFFF; 
+            --text-main: #1C1C1E;
+            --text-secondary: #8E8E93;
+        }
+        body { 
+            margin: 0; 
+            background: #000000; 
+            display: flex; 
+            justify-content: center; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        }
+        .app { 
+            width: 440px; 
+            height: 100vh; 
+            background: var(--system-bg); 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+        .status-bar { 
+            padding: 15px 20px; 
+            font-size: 11px; 
+            color: var(--text-secondary); 
+            border-bottom: 1px solid #E5E5EA; 
+            display: flex; 
+            justify-content: space-between; 
+            letter-spacing: 1px;
+        }
+        .chat-container { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+        .message-bubble { 
+            max-width: 80%; 
+            padding: 12px 16px; 
+            border-radius: 20px; 
+            font-size: 16px; 
+            line-height: 1.5; 
+            word-wrap: break-word;
+        }
+        .ai-message { 
+            background: #F2F2F7; 
+            color: var(--text-main); 
+            align-self: flex-start; 
+            border-bottom-left-radius: 4px; 
+        }
+        .user-message { 
+            background: var(--ai-purple); 
+            color: #FFFFFF; 
+            align-self: flex-end; 
+            border-bottom-right-radius: 4px; 
+        }
+        .input-interface { 
+            padding: 20px; 
+            border-top: 1px solid #E5E5EA; 
+            display: flex; 
+            gap: 12px; 
+            background: #FFFFFF; 
+        }
+        .text-input { 
+            flex: 1; 
+            border: 1px solid #D1D1D6; 
+            border-radius: 24px; 
+            padding: 12px 20px; 
+            outline: none; 
+            font-size: 16px; 
+            transition: border-color 0.2s;
+        }
+        .text-input:focus {
+            border-color: var(--ai-purple);
+        }
+        .send-button { 
+            background: var(--ai-purple); 
+            color: #FFFFFF; 
+            border: none; 
+            padding: 0 24px; 
+            border-radius: 24px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 15px;
+        }
+    </style>
 </head>
 <body>
 
-<div class="app-shell">
-    <div class="header">AI Core - 全功能版</div>
-    <div class="chat-box" id="chat-box">
-        <div class="msg ai">你好！我是 AI Core，全功能模式已啟動。✨你可以聊天、算數學或玩數字炸彈遊戲。</div>
+<div class="app">
+    <div class="status-bar">
+        <span>CORE VERSION 2.5.0</span>
+        <span id="latency-display">LATENCY: 0.00ms</span>
     </div>
-    <div class="input-area">
-        <input type="text" id="user-input" placeholder="輸入訊息..." onkeypress="if(event.key==='Enter') processInput()">
-        <div class="send-btn" onclick="processInput()">
-            <i class="material-icons" style="font-size:30px;">arrow_circle_up</i>
-        </div>
+
+    <div id="chat-stage" class="chat-container">
+        <div class="message-bubble ai-message">核心系統初始化完成。雙軌邏輯引擎已就緒。</div>
+    </div>
+
+    <div class="input-interface">
+        <input type="text" id="user-input-field" placeholder="輸入指令或訊息..." autocomplete="off">
+        <button id="execute-command" onclick="processInteraction()">發送</button>
     </div>
 </div>
 
 <script>
-// ===== 回覆池 =====
-const GREET_POOL = ["嗨！很高興見到你。😊","你好呀！準備開始聊天了嗎？","哈囉！我已就緒。✨","您好，AI Core 隨時待命。"];
-const TIME_POOL = ["早安！希望今天一切順利☀️","午安！來點休息吧☕","晚安，願你有個好夢🌙"];
-const MEMORY_POOL = ["我們之前聊到「{0}」，要繼續嗎？","你之前提過「{0}」，想再深入一下嗎？"];
-const PRO_POOL = ["我是 AI Core，專業模式已啟動。","關於專業領域，我可以協助分析。"];
-let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+    const VOCABULARY_DATABASE = { 
+        "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, 
+        "我": 7573, "是": 3741, "專": 1174820, "業": 22174 
+    };
+    
+    const REVERSE_DECODER = { 
+        "36452": "哈", "1746,235": "囉", "12942": "你", "8021": "好", 
+        "7573": "我", "3741": "是", "1174820": "專", "22174": "業" 
+    };
 
-// ===== 數字炸彈遊戲變數 =====
-let bombGameActive = false;
-let bombNumber = 0;
-let bombTries = 0;
+    document.getElementById('user-input-field').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') { processInteraction(); }
+    });
 
-// ===== 基本功能 =====
-function addMsg(text, cls){
-    const box = document.getElementById('chat-box');
-    const d = document.createElement('div');
-    d.className = `msg ${cls}`;
-    d.innerText = text;
-    box.appendChild(d);
-    box.scrollTop = box.scrollHeight;
-}
+    function processInteraction() {
+        const startTime = performance.now();
+        const inputElement = document.getElementById('user-input-field');
+        const userInput = inputElement.value.trim();
+        
+        if (userInput === "") return;
 
-function processInput(){
-    const input = document.getElementById('user-input');
-    const text = input.value.trim();
-    if(!text) return;
-    addMsg(text,'user');
-    input.value = '';
+        appendMessage(userInput, 'user-message');
+        inputElement.value = '';
 
-    chatHistory.push(text);
-    if(chatHistory.length>10) chatHistory.shift();
-    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        const inputTokenStream = userInput.split('').map(character => VOCABULARY_DATABASE[character] || 0);
+        console.log("Input Token Stream:", inputTokenStream);
 
-    const box = document.getElementById('chat-box');
-    const thinking = document.createElement('div');
-    thinking.className='thinking';
-    thinking.innerText='AI 正在思考...';
-    box.appendChild(thinking);
-    box.scrollTop = box.scrollHeight;
+        let outputTokenStream = [];
+        let systemResponseText = "";
 
-    setTimeout(()=>{
-        box.removeChild(thinking);
-        let reply = generateReply(text);
-        addMsg(reply,'ai');
-    },600);
-}
-
-function generateReply(text){
-    const lower = text.toLowerCase();
-
-    // ===== 數字炸彈遊戲指令 =====
-    if(/開始炸彈遊戲/.test(text)){
-        bombGameActive = true;
-        bombNumber = Math.floor(Math.random()*100)+1;
-        bombTries = 0;
-        return `🎯 數字炸彈遊戲開始！我已設置一個 1~100 的炸彈數字。請猜一個數字。`;
-    }
-    if(bombGameActive){
-        const guess = parseInt(text);
-        if(!isNaN(guess)){
-            bombTries++;
-            if(guess === bombNumber){
-                bombGameActive = false;
-                return `💥 BOOM！你踩到炸彈！總共猜了 ${bombTries} 次。遊戲結束。`;
-            }else if(guess < bombNumber){
-                return `✅ 安全！你的數字 ${guess} 太小了，再猜一次。`;
-            }else{
-                return `✅ 安全！你的數字 ${guess} 太大了，再猜一次。`;
+        if (inputTokenStream.includes(36452) && inputTokenStream.includes("1746,235")) {
+            outputTokenStream = [12942, 8021, 36452, "1746,235"];
+        } 
+        else if (inputTokenStream.includes(1174820)) {
+            outputTokenStream = [7573, 3741, 1174820, 22174];
+        } 
+        else if (userInput.includes("數字炸彈") || userInput.includes("遊戲")) {
+            systemResponseText = "模式切換：數字炸彈遊戲邏輯已在後台準備，請輸入起始數字。";
+        }
+        else if (userInput.includes("你是誰") || userInput.includes("身份")) {
+            systemResponseText = "我是由開發者定義的 AI Core 運算架構，目前運行於雙軌並行模式。";
+        }
+        else if (userInput.includes("早安") || userInput.includes("午安") || userInput.includes("晚安")) {
+            systemResponseText = "時段識別成功。祝您運算愉快。";
+        }
+        else if (userInput.includes("功能") || userInput.includes("指令")) {
+            systemResponseText = "目前支援清單：1.Token 編解碼 2.萬能數學運算 3.關鍵字模糊匹配 4.系統性能監控。";
+        }
+        else if (userInput.includes("強") || userInput.includes("厲害") || userInput.includes("棒")) {
+            systemResponseText = "正面權重已紀錄。感謝對核心邏輯的肯定。";
+        }
+        else if (userInput.includes("笨") || userInput.includes("爛") || userInput.includes("錯")) {
+            systemResponseText = "負面權重識別。請開發者評估是否需要手動修正 Token 字典。";
+        }
+        else if (userInput.includes("天氣") || userInput.includes("時間")) {
+            systemResponseText = "外部資訊 API 目前尚未掛載，僅支援本地邏輯運算。";
+        }
+        else if (userInput.includes("再見") || userInput.includes("掰掰")) {
+            systemResponseText = "程序準備進入休眠模式，隨時等待下次喚醒。";
+        }
+        else if (/[0-9\+\-\*\/]/.test(userInput)) {
+            try { 
+                const mathResult = eval(userInput.replace('=', '')); 
+                systemResponseText = "數學引擎運算結果：" + mathResult; 
+            } catch (error) { 
+                systemResponseText = "算式語法解析錯誤。"; 
             }
+        } 
+        else {
+            systemResponseText = "序列分析完成。目前字典庫無此對應，已將數據片段存入待訓練集。";
         }
+
+        const finalOutputString = outputTokenStream.length > 0 
+            ? outputTokenStream.map(id => REVERSE_DECODER[id] || "？").join('') 
+            : systemResponseText;
+
+        setTimeout(() => {
+            appendMessage(finalOutputString, 'ai-message');
+            const endTime = performance.now();
+            document.getElementById('latency-display').innerText = "LATENCY: " + (endTime - startTime).toFixed(2) + "ms";
+        }, 30);
     }
 
-    // ===== 數學運算 =====
-    if(/[0-9\+\-\*\/\=]/.test(text)){
-        try{
-            let res = eval(text.replace('=',''));
-            return `計算結果是：${res}`;
-        }catch{
-            return "我看不懂這個算式，但我已記住它。";
-        }
+    function appendMessage(text, className) {
+        const chatStage = document.getElementById('chat-stage');
+        const messageBubble = document.createElement('div');
+        messageBubble.className = "message-bubble " + className;
+        messageBubble.innerText = text;
+        chatStage.appendChild(messageBubble);
+        chatStage.scrollTop = chatStage.scrollHeight;
     }
-
-    // ===== 問候 / 哈囉 =====
-    if(/哈|你好|嗨/.test(text)){
-        return GREET_POOL[Math.floor(Math.random()*GREET_POOL.length)];
-    }
-
-    // ===== 時間問候 =====
-    const hour = new Date().getHours();
-    if(/早|午|晚/.test(text) || hour<10){
-        return TIME_POOL[Math.floor(Math.random()*TIME_POOL.length)];
-    }
-
-    // ===== 上下文記憶回溯 =====
-    if(chatHistory.length>2 && Math.random()>0.7){
-        const old = chatHistory[chatHistory.length-2];
-        return MEMORY_POOL[Math.floor(Math.random()*MEMORY_POOL.length)].replace('{0}',old);
-    }
-
-    // ===== 專業模式 =====
-    if(/專業|分析/.test(text)){
-        return PRO_POOL[Math.floor(Math.random()*PRO_POOL.length)];
-    }
-
-    // ===== 預設回覆 =====
-    return "我已收到你的訊息，並將其記錄。";
-}
-
-// ===== 初始化恢復聊天歷史 =====
-chatHistory.forEach(m=>addMsg(m,'user'));
 </script>
 
 </body>
