@@ -3,126 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
-    <title>AI Core - 全 0 容錯開發版</title>
+    <title>AI 專業助手</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        :root { --ai-blue: #51A8FF; --panel-bg: #1a1a1a; }
-        body { margin: 0; background: #222; display: flex; justify-content: center; font-family: monospace; }
+        :root { --main-blue: #007AFF; --ai-chat-bg: #FFFFFF; --user-chat-bg: #007AFF; }
+        body { margin: 0; background: #F2F2F7; display: flex; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
-        .app-shell {
-            width: 440px; height: 920px; background: #F0F2F5;
+        .app-container {
+            width: 440px; height: 95vh; background: #FFF;
             display: flex; flex-direction: column; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-top: 2.5vh; border-radius: 20px; overflow: hidden;
         }
 
-        /* 加強版：Token 流監控面板 */
-        .dev-panel {
-            background: var(--panel-bg); color: #00FF41; padding: 15px; 
-            font-size: 12px; height: 140px; border-bottom: 3px solid #333;
-            overflow-y: auto; white-space: pre-wrap;
+        /* 頂部標題列 - 給別人看的專業感 */
+        .app-header {
+            padding: 20px; background: white; border-bottom: 1px solid #EEE;
+            display: flex; align-items: center; justify-content: space-between;
         }
+        .status-dot { width: 8px; height: 8px; background: #4CD964; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
-        .chat-area { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-window { flex: 1; padding: 20px; overflow-y: auto; background: #F9F9FB; display: flex; flex-direction: column; gap: 12px; }
         
-        .bubble { max-width: 85%; padding: 10px 15px; border-radius: 15px; font-size: 15px; line-height: 1.4; }
-        .ai { background: white; align-self: flex-start; border-top-left-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .user { background: var(--ai-blue); color: white; align-self: flex-end; border-top-right-radius: 2px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 16px; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .ai-msg { background: white; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .user-msg { background: var(--main-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
 
-        .input-bar { height: 80px; background: white; display: flex; align-items: center; padding: 0 10px; border-top: 1px solid #ddd; }
-        input { flex: 1; height: 40px; border: 1px solid #ccc; border-radius: 20px; padding: 0 15px; outline: none; }
-        .send-btn { background: var(--ai-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; margin-left: 8px; cursor: pointer; }
+        .input-section { padding: 20px; background: white; display: flex; align-items: center; gap: 10px; border-top: 1px solid #EEE; }
+        #input-field { flex: 1; border: none; background: #E9E9EB; padding: 12px 20px; border-radius: 25px; font-size: 16px; outline: none; }
+        .send-icon { color: var(--main-blue); cursor: pointer; font-size: 30px; }
 
-        .nav { height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; }
-        .nav i { color: #999; font-size: 24px; }
+        /* 矩形 1：底部功能選單 */
+        .bottom-nav { height: 80px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #EEE; }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; color: #8E8E93; font-size: 10px; text-decoration: none; }
+        .nav-btn.active { color: var(--main-blue); }
     </style>
 </head>
 <body>
 
-<div class="app-shell">
-    <div class="dev-panel" id="monitor">
-[初始化] AI 核心已啟動
-[字典] 已定義: 哈, 囉, 你, 好, 我, 是, 專, 業
-[狀態] 監聽所有 Token 0 輸入中...
+<div class="app-container">
+    <div class="app-header">
+        <span style="font-weight: 600;">AI Core 專業版</span>
+        <span style="font-size: 12px; color: #8E8E93;"><span class="status-dot"></span>在線</span>
     </div>
 
-    <div class="chat-area" id="display">
-        <div class="bubble ai">你好！我是你的專屬 AI。現在你可以隨意輸入任何長句子，就算我沒學過的字（Token 0）我也會記錄下來。</div>
+    <div class="chat-window" id="chat-box">
+        <div class="msg ai-msg">您好，我是您的 AI 助手。請問今天有什麼可以幫您的？</div>
     </div>
 
-    <div class="input-bar">
-        <input type="text" id="msg-in" placeholder="請輸入長句子測試...">
-        <button class="send-btn" onclick="aiLogic()">
-            <i class="material-icons">send</i>
-        </button>
+    <div class="input-section">
+        <input type="text" id="input-field" placeholder="輸入訊息..." autocomplete="off">
+        <i class="material-icons send-icon" onclick="userSend()">send</i>
     </div>
 
-    <div class="nav">
-        <i class="material-icons" style="color:#51A8FF">memory</i>
-        <i class="material-icons">analytics</i>
-        <i class="material-icons">settings</i>
+    <div class="bottom-nav">
+        <a href="#" class="nav-btn active"><i class="material-icons">chat</i><span>聊天</span></a>
+        <a href="#" class="nav-btn"><i class="material-icons">explore</i><span>探索</span></a>
+        <a href="#" class="nav-btn"><i class="material-icons">person</i><span>設定</span></a>
     </div>
 </div>
 
 <script>
-    // 你的專屬碼
+    // 開發者定義的 Token 碼
     const MY_VOCAB = {
         "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021,
         "我": 7573, "是": 3741, "專": 1174820, "業": 22174
     };
 
-    function aiLogic() {
-        const input = document.getElementById('msg-in');
-        const text = input.value;
-        if (!text) return;
+    function userSend() {
+        const input = document.getElementById('input-field');
+        const text = input.value.trim();
+        if(!text) return;
 
-        addMsg(text, 'user');
+        addBubble(text, 'user-msg');
         input.value = '';
 
-        // 1. Token 轉換處理
-        let tokens = [];
-        let zeroList = []; // 存儲沒定義的字
-
-        for (let char of text) {
-            const code = MY_VOCAB[char];
-            if (code) {
-                tokens.push(code);
-            } else {
-                tokens.push(0);
-                zeroList.push(char);
-            }
-        }
-
-        // 2. 顯示監控數據 (這就是傳到你這在看的數據)
-        const mon = document.getElementById('monitor');
-        const timestamp = new Date().toLocaleTimeString();
-        mon.innerHTML += `\n[${timestamp}] 收到數據: "${text}"\n`;
-        mon.innerHTML += `> Token 流: [${tokens.join(",")}]\n`;
-        if (zeroList.length > 0) {
-            mon.innerHTML += `> 偵測到 Token 0: { ${Array.from(new Set(zeroList)).join(" ")} }\n`;
-            mon.innerHTML += `> 處理建議: 待標記並傳回訓練集\n`;
-        }
-        mon.scrollTop = mon.scrollHeight;
-
-        // 3. AI 結合性回覆
-        setTimeout(() => {
-            let reply = "";
-            const recognitionRate = ((tokens.filter(t => t !== 0).length / tokens.length) * 100).toFixed(1);
-
-            if (recognitionRate > 50) {
-                reply = `這句話我理解了 ${recognitionRate}%。感覺你在跟我打招呼或討論專業問題。`;
-            } else {
-                reply = `這段話包含很多我還沒學過的 Token 0 (${zeroList.length} 個字)。我已經把它們打包存檔，等你審核後我就能學會。`;
-            }
-            addMsg(reply, 'ai');
-        }, 600);
+        // 核心邏輯：Token 化與數據回傳
+        processData(text);
     }
 
-    function addMsg(t, c) {
-        const d = document.getElementById('display');
-        const b = document.createElement('div');
-        b.className = `bubble ${c}`;
-        b.innerText = t;
-        d.appendChild(b);
-        d.scrollTop = d.scrollHeight;
+    function processData(text) {
+        // 1. 生成 Token 流 (未知字標記為 0)
+        let tokenStream = [];
+        let unknownChars = [];
+        for (let char of text) {
+            if (MY_VOCAB[char]) {
+                tokenStream.push(MY_VOCAB[char]);
+            } else {
+                tokenStream.push(0);
+                unknownChars.push(char);
+            }
+        }
+
+        // 2. 模擬傳送到開發者後台 (傳到你這在看)
+        console.log("--- [開發者數據收集] ---");
+        console.log("來源文字:", text);
+        console.log("Token ID:", tokenStream);
+        console.log("待定義字元:", unknownChars);
+        console.log("-----------------------");
+
+        // 3. AI 的結合性回覆
+        setTimeout(() => {
+            let response = "";
+            // 如果全是 Token 0，給予學習中的模糊回覆
+            if (tokenStream.every(t => t === 0)) {
+                response = "這是一個很有深度的話題，我正在記錄並分析相關資訊以提供更精確的回答。";
+            } else if (tokenStream.includes(36452)) {
+                response = "你好！很高興能為您服務。";
+            } else {
+                response = "收到您的訊息，我會根據專業邏輯進行處理。";
+            }
+            addBubble(response, 'ai-msg');
+        }, 800);
+    }
+
+    function addBubble(txt, type) {
+        const box = document.getElementById('chat-box');
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        div.innerText = txt;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
     }
 </script>
 
