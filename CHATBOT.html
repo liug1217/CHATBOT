@@ -3,123 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
-    <title>AI Core - 記憶進化版</title>
+    <title>AI Core 3.0 - 持久進化版</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        :root { --ai-blue: #007AFF; --glass: rgba(255, 255, 255, 0.8); }
-        body { margin: 0; background: #121212; display: flex; justify-content: center; font-family: -apple-system, sans-serif; }
-        .app-shell { width: 440px; height: 920px; background: #F2F2F7; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        :root { --ai-primary: #007AFF; --glass-bg: rgba(255,255,255,0.9); }
+        body { margin: 0; background: #1c1c1e; display: flex; justify-content: center; font-family: -apple-system, sans-serif; }
+        .app-shell { width: 440px; height: 95vh; background: #f2f2f7; margin-top: 2.5vh; display: flex; flex-direction: column; border-radius: 30px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
         
-        /* 記憶狀態指示器 */
-        .memory-bar { background: #333; color: #aaa; padding: 5px 15px; font-size: 10px; display: flex; gap: 10px; }
+        /* 頂部資訊：顯示持久化狀態 */
+        .info-bar { background: #333; color: #00FF41; padding: 8px 15px; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; }
         
-        .header { padding: 15px; background: white; text-align: center; font-weight: bold; border-bottom: 1px solid #ddd; }
-        .chat-area { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .msg { max-width: 80%; padding: 12px 18px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; animation: pop 0.3s ease; }
+        @keyframes pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         
-        /* 氣泡樣式與動畫 */
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; word-wrap: break-word; }
-        .ai { background: white; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .user { background: var(--ai-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai { background: white; align-self: flex-start; border-bottom-left-radius: 4px; color: #1c1c1e; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .user { background: var(--ai-primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
         
-        @keyframes typing { from { opacity: 0.3; } to { opacity: 1; } }
-        .typing-dot { animation: typing 1s infinite alternate; }
+        /* 打字機特效游標 */
+        .typing::after { content: '|'; animation: blink 0.8s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        .input-box { padding: 15px; background: white; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
-        input { flex: 1; border: none; background: #eee; padding: 10px 18px; border-radius: 20px; outline: none; }
-        .send-btn { color: var(--ai-blue); cursor: pointer; }
+        .input-box { padding: 20px; background: white; display: flex; align-items: center; gap: 12px; border-top: 1px solid #ddd; }
+        input { flex: 1; border: none; background: #e9e9eb; padding: 12px 20px; border-radius: 25px; outline: none; font-size: 16px; }
+        .btn-circle { width: 40px; height: 40px; background: var(--ai-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div class="memory-bar" id="mem-status">🧠 記憶層：空白 (Ready)</div>
-    <div class="header">AI CORE 2.0</div>
-    <div class="chat-area" id="chat-box">
-        <div class="msg ai">你好！我已加載上下文記憶模組。試著跟我聊天，我會記住你說過的話。✨</div>
+    <div class="info-bar">
+        <span id="storage-status">💾 LocalStorage: Active</span>
+        <span id="token-count">Tokens: 0</span>
     </div>
+
+    <div class="chat-area" id="display">
+        </div>
+
     <div class="input-box">
-        <input type="text" id="user-in" placeholder="輸入訊息..." onkeypress="if(event.key==='Enter') processInput()">
-        <i class="material-icons send-btn" onclick="processInput()">send</i>
+        <input type="text" id="user-in" placeholder="試試輸入「算1+1」或「猜數字」" autocomplete="off">
+        <div class="btn-circle" onclick="handleInput()">
+            <i class="material-icons">arrow_upward</i>
+        </div>
     </div>
 </div>
 
 <script>
-    // 你的專屬 Token 字典
-    const VOCAB = { "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, "我": 7573, "是": 3741, "專": 1174820, "業": 22174 };
-
-    // 擴展動態回覆池
-    const RESPONSE_POOLS = {
-        GREETING: ["哈囉！😊", "你好呀！很高興見到你。", "嗨！準備好開始工作了嗎？", "您好，AI 核心隨時待命。"],
-        TIME: ["早安！希望你有個充滿活力的一天。☕", "午安！需要休息一下嗎？", "晚安，願你有個好夢。🌙"],
-        EMO: ["聽起來你現在心情不錯呢！🌟", "別擔心，我會一直陪著你。💪", "哈哈，這太有趣了！😂"],
-        PRO: ["關於專業領域，我能為您提供深度的 Token 分析。", "我是 AI 專門構建的助手，穩定性是我的強項。"],
-        MEMORY_RECALL: ["剛才我們聊到「{0}」，要繼續深入嗎？", "你之前提到了「{0}」，這讓我想到..."]
+    // 1. 擴展 Token 字典
+    const VOCAB = {
+        "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021,
+        "算": 5566, "猜": 7788, "天": 9901, "氣": 9902
     };
 
-    // 上下文記憶堆棧
-    let chatHistory = [];
+    // 2. 初始化持久記憶
+    let memory = JSON.parse(localStorage.getItem('ai_memory')) || { history: [], userName: "用戶", gameActive: false, targetNum: 0 };
 
-    function processInput() {
+    window.onload = () => {
+        const welcome = memory.history.length > 0 ? `歡迎回來！我們上次聊到：${memory.history.slice(-1)[0].text}` : "您好！我是進化後的 AI Core 3.0。我現在擁有持久記憶，並能執行簡單指令。";
+        addMsg(welcome, 'ai');
+        updateStatus();
+    };
+
+    function handleInput() {
         const input = document.getElementById('user-in');
         const text = input.value.trim();
         if (!text) return;
 
         addMsg(text, 'user');
         input.value = '';
+        
+        // 數據化
+        const tokens = Array.from(text).map(c => VOCAB[c] || 0);
+        saveMemory(text, 'user');
 
-        // 1. Token 分析
-        let tokens = [];
-        for (let char of text) tokens.push(VOCAB[char] || 0);
-
-        // 2. 記憶更新：將使用者輸入推入歷史
-        chatHistory.push(text);
-        if (chatHistory.length > 5) chatHistory.shift();
-        document.getElementById('mem-status').innerText = `🧠 記憶層：已儲存 ${chatHistory.length} 條歷史`;
-
-        // 3. 生成邏輯 (結合上下文)
-        generateDynamicResponse(text, tokens);
+        // AI 意圖分析與動態回覆
+        setTimeout(() => processLogic(text, tokens), 600);
     }
 
-    function generateDynamicResponse(text, tokens) {
+    function processLogic(text, tokens) {
         let reply = "";
-        const now = new Date().getHours();
-
-        // 隨機 Emoji 注入
-        const emojis = ["✨", "🚀", "🤖", "💡"];
-        const randEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-        // A. 判斷是否為時間問候
-        if (text.includes("早") || (now < 10 && tokens.includes(8021))) {
-            reply = RESPONSE_POOLS.TIME[0];
+        
+        // --- 路由 1: 指令執行 (小遊戲) ---
+        if (text.includes("猜數字") || tokens.includes(7788)) {
+            memory.gameActive = true;
+            memory.targetNum = Math.floor(Math.random() * 10) + 1;
+            reply = "🎮 遊戲開始！我心中想了一個 1 到 10 的數字，你猜是多少？";
         } 
-        // B. 判斷是否觸發記憶回溯 (如果歷史中有提到過某個關鍵詞)
-        else if (chatHistory.length > 2 && Math.random() > 0.7) {
-            const oldTopic = chatHistory[chatHistory.length - 3];
-            reply = RESPONSE_POOLS.MEMORY_RECALL[0].replace("{0}", oldTopic);
+        else if (memory.gameActive && !isNaN(text)) {
+            const guess = parseInt(text);
+            if (guess === memory.targetNum) {
+                reply = "🎉 答對了！你太厲害了。遊戲結束。";
+                memory.gameActive = false;
+            } else {
+                reply = guess > memory.targetNum ? "太大了，再試一次！" : "太小了，再試一次！";
+            }
         }
-        // C. 基本問候 (隨機池)
+        // --- 路由 2: 指令執行 (簡單計算) ---
+        else if (text.includes("算") || tokens.includes(5566)) {
+            try {
+                const expr = text.replace(/[^\d+\-*/().]/g, '');
+                reply = `🔢 計算結果是：${eval(expr)}。這對我來說小菜一碟！`;
+            } catch {
+                reply = "計算格式好像不對喔，請輸入如「算 5*5」。";
+            }
+        }
+        // --- 路由 3: 上下文閒聊 ---
         else if (tokens.includes(36452) || tokens.includes(8021)) {
-            reply = RESPONSE_POOLS.GREETING[Math.floor(Math.random() * RESPONSE_POOLS.GREETING.length)];
+            const greets = ["您好！記得我們是好朋友對吧？🤝", "哈囉！今天的心情看起來不錯喔！", "你好！很高興你又找我聊天了。✨"];
+            reply = greets[Math.floor(Math.random() * greets.length)];
         }
-        // D. 專業/身份判斷
-        else if (tokens.includes(1174820)) {
-            reply = RESPONSE_POOLS.PRO[Math.floor(Math.random() * RESPONSE_POOLS.PRO.length)];
-        }
+        // --- 路由 4: 未知處理 ---
         else {
-            reply = `我正在學習這段內容... 已記錄 Token 0 [${text.substring(0,3)}...] ${randEmoji}`;
+            reply = "這超出了我的 Token 範圍，但我已經記在腦子裡了。🧠";
         }
 
-        // 模擬打字效果
-        setTimeout(() => addMsg(reply, 'ai'), 600);
+        addMsg(reply, 'ai', true);
+        saveMemory(reply, 'ai');
+        updateStatus();
     }
 
-    function addMsg(txt, cl) {
-        const box = document.getElementById('chat-box');
-        const d = document.createElement('div');
-        d.className = `msg ${cl}`;
-        d.innerText = txt;
-        box.appendChild(d);
-        box.scrollTop = box.scrollHeight;
+    function addMsg(txt, cl, typing = false) {
+        const d = document.getElementById('display');
+        const b = document.createElement('div');
+        b.className = `msg ${cl} ${typing ? 'typing' : ''}`;
+        d.appendChild(b);
+
+        if (typing) {
+            let i = 0;
+            const timer = setInterval(() => {
+                b.innerText += txt[i];
+                i++;
+                if (i >= txt.length) {
+                    clearInterval(timer);
+                    b.classList.remove('typing');
+                }
+                d.scrollTop = d.scrollHeight;
+            }, 30);
+        } else {
+            b.innerText = txt;
+            d.scrollTop = d.scrollHeight;
+        }
+    }
+
+    function saveMemory(text, role) {
+        memory.history.push({ role, text });
+        if (memory.history.length > 20) memory.history.shift();
+        localStorage.setItem('ai_memory', JSON.stringify(memory));
+    }
+
+    function updateStatus() {
+        document.getElementById('token-count').innerText = `History: ${memory.history.length}`;
     }
 </script>
 
