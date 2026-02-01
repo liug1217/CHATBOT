@@ -1,132 +1,151 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
-    <title>AI Core - 萬能運算版</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <style>
-        :root { --ai-blue: #007AFF; --tech-green: #00FF41; }
-        body { margin: 0; background: #121212; display: flex; justify-content: center; font-family: 'PingFang TC', sans-serif; }
-        
-        .app-shell {
-            width: 440px; height: 95vh; background: #FFF; margin-top: 2.5vh;
-            display: flex; flex-direction: column; border-radius: 24px; overflow: hidden;
-        }
-
-        /* 隱藏的開發者觀察窗 (點擊標題開啟) */
-        .dev-overlay {
-            background: rgba(0,0,0,0.9); color: var(--tech-green); 
-            padding: 15px; font-size: 11px; height: 120px; overflow-y: auto;
-            border-bottom: 2px solid #333; font-family: monospace;
-        }
-
-        .chat-display { flex: 1; padding: 20px; overflow-y: auto; background: #F2F2F7; display: flex; flex-direction: column; gap: 15px; }
-        
-        .bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; font-size: 16px; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .ai { background: white; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .user { background: var(--ai-blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-
-        /* 思考動畫 */
-        .thinking { font-style: italic; color: #8E8E93; font-size: 13px; margin-bottom: 5px; }
-
-        .input-area { padding: 20px; background: white; display: flex; gap: 10px; border-top: 1px solid #EEE; }
-        input { flex: 1; border: none; background: #E9E9EB; padding: 12px 20px; border-radius: 25px; outline: none; }
-        .send-btn { color: var(--ai-blue); cursor: pointer; display: flex; align-items: center; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
+<title>AI Core - 全功能用戶版</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+:root { --ai-blue: #007AFF; --bg-light: #F2F2F7; --bg-dark: #121212; }
+body { margin:0; display:flex; justify-content:center; font-family:-apple-system, sans-serif; background:var(--bg-dark); }
+.app-shell { width:440px; height:95vh; background:#FFF; margin-top:2.5vh; display:flex; flex-direction:column; border-radius:24px; overflow:hidden; }
+.header { padding:15px; text-align:center; font-weight:bold; border-bottom:1px solid #ddd; }
+.chat-box { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; background:var(--bg-light); }
+.msg { max-width:85%; padding:12px 18px; border-radius:20px; font-size:15px; line-height:1.5; word-wrap:break-word; }
+.user { background:var(--ai-blue); color:white; align-self:flex-end; border-bottom-right-radius:4px; }
+.ai { background:white; align-self:flex-start; border-bottom-left-radius:4px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+.thinking { font-style:italic; color:#666; font-size:13px; margin-bottom:5px; }
+.input-area { padding:15px; background:white; display:flex; gap:10px; border-top:1px solid #ddd; }
+input { flex:1; border:none; background:#eee; padding:12px 18px; border-radius:25px; outline:none; font-size:15px; }
+.send-btn { color:var(--ai-blue); cursor:pointer; display:flex; align-items:center; }
+</style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div class="dev-overlay" id="dev-log">
-        [Kernel] 萬能解析模式已啟動...<br>
-        [Target] 接收所有輸入並執行假計算
+    <div class="header">AI Core - 全功能版</div>
+    <div class="chat-box" id="chat-box">
+        <div class="msg ai">你好！我是 AI Core，全功能模式已啟動。✨你可以聊天、算數學或玩數字炸彈遊戲。</div>
     </div>
-
-    <div class="chat-display" id="chat-box">
-        <div class="bubble ai">你好，我是全能型 AI Core。無論是數學、邏輯或知識問答，我都能為您計算。請輸入任何指令。</div>
-    </div>
-
-    <div id="think-indicator" style="padding: 0 20px; display: none;">
-        <div class="thinking">AI 正在計算 Token 序列...</div>
-    </div>
-
     <div class="input-area">
-        <input type="text" id="user-input" placeholder="問我任何事，我都能算..." autocomplete="off">
-        <div class="send-btn" onclick="masterCompute()">
-            <i class="material-icons" style="font-size: 35px;">arrow_circle_up</i>
+        <input type="text" id="user-input" placeholder="輸入訊息..." onkeypress="if(event.key==='Enter') processInput()">
+        <div class="send-btn" onclick="processInput()">
+            <i class="material-icons" style="font-size:30px;">arrow_circle_up</i>
         </div>
     </div>
 </div>
 
 <script>
-    // 你的專屬碼 (保持不變)
-    const MY_VOCAB = {
-        "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021,
-        "我": 7573, "是": 3741, "專": 1174820, "業": 22174
-    };
+// ===== 回覆池 =====
+const GREET_POOL = ["嗨！很高興見到你。😊","你好呀！準備開始聊天了嗎？","哈囉！我已就緒。✨","您好，AI Core 隨時待命。"];
+const TIME_POOL = ["早安！希望今天一切順利☀️","午安！來點休息吧☕","晚安，願你有個好夢🌙"];
+const MEMORY_POOL = ["我們之前聊到「{0}」，要繼續嗎？","你之前提過「{0}」，想再深入一下嗎？"];
+const PRO_POOL = ["我是 AI Core，專業模式已啟動。","關於專業領域，我可以協助分析。"];
+let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
 
-    function masterCompute() {
-        const input = document.getElementById('user-input');
-        const text = input.value.trim();
-        if (!text) return;
+// ===== 數字炸彈遊戲變數 =====
+let bombGameActive = false;
+let bombNumber = 0;
+let bombTries = 0;
 
-        addBubble(text, 'user');
-        input.value = '';
-        document.getElementById('think-indicator').style.display = 'block';
+// ===== 基本功能 =====
+function addMsg(text, cls){
+    const box = document.getElementById('chat-box');
+    const d = document.createElement('div');
+    d.className = `msg ${cls}`;
+    d.innerText = text;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+}
 
-        // 1. Token 解析與「假計算」過程
-        let tokens = [];
-        for (let char of text) {
-            tokens.push(MY_VOCAB[char] || 0);
+function processInput(){
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if(!text) return;
+    addMsg(text,'user');
+    input.value = '';
+
+    chatHistory.push(text);
+    if(chatHistory.length>10) chatHistory.shift();
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+
+    const box = document.getElementById('chat-box');
+    const thinking = document.createElement('div');
+    thinking.className='thinking';
+    thinking.innerText='AI 正在思考...';
+    box.appendChild(thinking);
+    box.scrollTop = box.scrollHeight;
+
+    setTimeout(()=>{
+        box.removeChild(thinking);
+        let reply = generateReply(text);
+        addMsg(reply,'ai');
+    },600);
+}
+
+function generateReply(text){
+    const lower = text.toLowerCase();
+
+    // ===== 數字炸彈遊戲指令 =====
+    if(/開始炸彈遊戲/.test(text)){
+        bombGameActive = true;
+        bombNumber = Math.floor(Math.random()*100)+1;
+        bombTries = 0;
+        return `🎯 數字炸彈遊戲開始！我已設置一個 1~100 的炸彈數字。請猜一個數字。`;
+    }
+    if(bombGameActive){
+        const guess = parseInt(text);
+        if(!isNaN(guess)){
+            bombTries++;
+            if(guess === bombNumber){
+                bombGameActive = false;
+                return `💥 BOOM！你踩到炸彈！總共猜了 ${bombTries} 次。遊戲結束。`;
+            }else if(guess < bombNumber){
+                return `✅ 安全！你的數字 ${guess} 太小了，再猜一次。`;
+            }else{
+                return `✅ 安全！你的數字 ${guess} 太大了，再猜一次。`;
+            }
         }
-
-        // 模擬後台數據記錄
-        updateLog(text, tokens);
-
-        // 2. 萬能回覆邏輯 (假計算：啥都能算的幻覺)
-        setTimeout(() => {
-            document.getElementById('think-indicator').style.display = 'none';
-            let result = "";
-
-            // 邏輯 A：如果是數學運算 (簡單模擬)
-            if (/[0-9\+\-\*\/\=]/.test(text)) {
-                try {
-                    // 嘗試真算，算不出來就假算
-                    const evalResult = eval(text.replace('=', ''));
-                    result = `計算完成。根據數值 Token 分析，結果為：${evalResult}。這項運算已存入專業數據庫。`;
-                } catch {
-                    result = "偵測到複雜運算指令，我已將此運算邏輯轉化為專屬 Token 序列，計算結果趨向於：正確。";
-                }
-            } 
-            // 邏輯 B：如果是問候或專業相關
-            else if (tokens.includes(36452) || tokens.includes(1174820)) {
-                result = "識別到核心指令。作為專業 AI，我已將您的需求納入權重計算，系統運作正常。";
-            }
-            // 邏輯 C：萬能模糊回覆 (啥都能算的結合性)
-            else {
-                const fakeHash = Math.random().toString(16).substring(2, 8).toUpperCase();
-                result = `分析完畢。這項請求包含 ${tokens.length} 個特徵，其中 ${tokens.filter(t=>t===0).length} 個為新特徵。運算碼 [${fakeHash}]：我已準備好執行此任務。`;
-            }
-
-            addBubble(result, 'ai');
-        }, 1200);
     }
 
-    function addBubble(t, c) {
-        const box = document.getElementById('chat-box');
-        const d = document.createElement('div');
-        d.className = `bubble ${c}`;
-        d.innerText = t;
-        box.appendChild(d);
-        box.scrollTop = box.scrollHeight;
+    // ===== 數學運算 =====
+    if(/[0-9\+\-\*\/\=]/.test(text)){
+        try{
+            let res = eval(text.replace('=',''));
+            return `計算結果是：${res}`;
+        }catch{
+            return "我看不懂這個算式，但我已記住它。";
+        }
     }
 
-    function updateLog(raw, tks) {
-        const log = document.getElementById('dev-log');
-        log.innerHTML += `<br>> 攔截輸入: ${raw}<br>> 轉換 Token: [${tks.join(",")}]<br>> 狀態: 數據已同步至後台...`;
-        log.scrollTop = log.scrollHeight;
+    // ===== 問候 / 哈囉 =====
+    if(/哈|你好|嗨/.test(text)){
+        return GREET_POOL[Math.floor(Math.random()*GREET_POOL.length)];
     }
+
+    // ===== 時間問候 =====
+    const hour = new Date().getHours();
+    if(/早|午|晚/.test(text) || hour<10){
+        return TIME_POOL[Math.floor(Math.random()*TIME_POOL.length)];
+    }
+
+    // ===== 上下文記憶回溯 =====
+    if(chatHistory.length>2 && Math.random()>0.7){
+        const old = chatHistory[chatHistory.length-2];
+        return MEMORY_POOL[Math.floor(Math.random()*MEMORY_POOL.length)].replace('{0}',old);
+    }
+
+    // ===== 專業模式 =====
+    if(/專業|分析/.test(text)){
+        return PRO_POOL[Math.floor(Math.random()*PRO_POOL.length)];
+    }
+
+    // ===== 預設回覆 =====
+    return "我已收到你的訊息，並將其記錄。";
+}
+
+// ===== 初始化恢復聊天歷史 =====
+chatHistory.forEach(m=>addMsg(m,'user'));
 </script>
 
 </body>
