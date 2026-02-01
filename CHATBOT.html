@@ -6,19 +6,52 @@
     <title>AI Chat</title>
     <style>
         :root { --user-bg: #212121; --ai-bg: #f7f7f8; --text: #374151; }
-        body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, sans-serif; }
-        .app-container { width: 440px; height: 956px; background: #fff; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
-        .nav-bar { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #eee; font-weight: 600; color: #444; }
-        .chat-area { flex: 1; overflow-y: auto; padding: 20px 0; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
+        body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        
+        /* 440x956 固定框架 */
+        .app-container { 
+            width: 440px; height: 956px; background: #fff; 
+            display: flex; flex-direction: column; overflow: hidden; 
+            box-shadow: 0 0 40px rgba(0,0,0,0.5); position: relative;
+        }
+
+        /* 頂部導航欄 */
+        .nav-bar { 
+            height: 60px; display: flex; align-items: center; justify-content: center; 
+            border-bottom: 1px solid #eee; font-weight: 600; color: #444; flex-shrink: 0;
+        }
+
+        /* 對話區域 */
+        .chat-area { 
+            flex: 1; overflow-y: auto; padding: 20px 0; 
+            display: flex; flex-direction: column; gap: 20px; 
+            scrollbar-width: none; 
+        }
+        .chat-area::-webkit-scrollbar { display: none; }
+
+        /* 訊息列 */
         .msg-row { display: flex; width: 100%; padding: 0 15px; box-sizing: border-box; }
         .msg-row.user { justify-content: flex-end; }
-        .bubble { max-width: 85%; padding: 12px 18px; font-size: 16px; line-height: 1.5; }
-        .ai .bubble { background: var(--ai-bg); color: var(--text); border-radius: 18px 18px 18px 4px; border: 1px solid #e5e5e5; }
-        .user .bubble { background: var(--user-bg); color: #fff; border-radius: 18px 18px 4px 18px; }
-        .input-zone { padding: 20px; border-top: 1px solid #eee; background: #fff; }
+        .bubble { max-width: 85%; padding: 12px 18px; font-size: 16px; line-height: 1.5; word-wrap: break-word; }
+        
+        .ai .bubble { 
+            background: var(--ai-bg); color: var(--text); 
+            border-radius: 18px 18px 18px 4px; border: 1px solid #e5e5e5; 
+        }
+        
+        .user .bubble { 
+            background: var(--user-bg); color: #fff; 
+            border-radius: 18px 18px 4px 18px; 
+        }
+
+        /* 底部輸入區 */
+        .input-zone { padding: 20px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
         .input-container { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 12px; padding: 8px 12px; }
-        input { flex: 1; border: none; outline: none; padding: 10px; font-size: 16px; }
-        .send-btn { width: 32px; height: 32px; background: #212121; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        input { flex: 1; border: none; outline: none; padding: 10px; font-size: 16px; background: transparent; }
+        .send-btn { 
+            width: 32px; height: 32px; background: #212121; color: white; 
+            border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -37,6 +70,7 @@
 </div>
 
 <script>
+    // 預留的 Token 字典
     const VOCAB = { "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, "專": 1174820, "業": 22174 };
 
     function sendMessage() {
@@ -47,48 +81,53 @@
         addBubble(text, 'user');
         input.value = '';
 
-        // 後台靜默運算 (使用者看不見)
+        // 後台 Token 靜默處理
         const tokens = text.split('').map(c => VOCAB[c] || 0);
-        console.log("Internal Token Flow:", tokens);
+        console.log("Token Stream:", tokens);
 
         let response = "";
 
-        // 1. 口語化計算判斷
+        // 1. 自然語言計算邏輯
         const nums = text.match(/\d+(\.\d+)?/g);
         if (nums && nums.length >= 2 && (text.includes("算") || text.includes("加") || text.includes("跟") || text.includes("和"))) {
             const sum = nums.reduce((a, b) => parseFloat(a) + parseFloat(b));
-            response = `好的，計算結果是 ${sum}。`;
+            response = `好的，我幫你算好了，結果是 ${sum}。`;
         } 
-        // 2. 大量文字感性回覆 (你可以繼續增加)
+        
+        // 2. 生活化感性回覆 (一般人語氣)
+        else if (text.includes("好想睡") || text.includes("想睡覺")) {
+            response = "累了嗎？如果真的撐不住，就先閉上眼睛休息個 15 分鐘吧，小睡一下效果通常很好喔。";
+        }
+        else if (text.includes("喝咖啡")) {
+            const hour = new Date().getHours();
+            // 傍晚 4 點後建議不要喝
+            if (hour >= 16 || hour < 5) {
+                response = "現在這個時間喝咖啡，可能會讓你晚上翻來覆去睡不著呢。要不要換成溫開水，或是起來走動一下提提神？";
+            } else {
+                response = "這時間來杯咖啡提神挺不錯的！不過記得適量就好，也要多喝點水喔。";
+            }
+        }
+        else if (text.includes("怎麼辦")) {
+            response = "別擔心，我們可以先深呼吸一下。你是因為太累了在煩惱，還是有其他事情讓你困擾呢？";
+        }
         else if (text.includes("哈囉") || text.includes("你好")) {
-            response = "你好啊！很高興見到你。";
+            response = "你好啊！很高興能陪你聊天。";
         }
         else if (text.includes("你是誰")) {
-            response = "我是你的智慧助手，隨時準備幫你解決問題或進行運算。";
-        }
-        else if (text.includes("專業")) {
-            response = "謝謝你的肯定！我會努力保持專業的服務品質。";
+            response = "我是你的個人智慧助手，隨時可以幫你處理簡單的任務或陪你聊聊天。";
         }
         else if (text.includes("謝謝") || text.includes("感謝")) {
-            response = "不客氣，這是我應該做的。還有其他需要幫忙的嗎？";
+            response = "不客氣，能幫上忙我也很開心。";
         }
         else if (text.includes("再見") || text.includes("拜拜")) {
-            response = "再見！祝你有個美好的一天，隨時歡迎回來。";
-        }
-        else if (text.includes("秘密")) {
-            response = "每個人都有自己的小秘密，我也會守護好我們之間的對話。";
-        }
-        else if (text.includes("笨") || text.includes("壞")) {
-            response = "抱歉讓你感到不愉快了，我會持續學習改進。";
-        }
-        else if (text.includes("天氣")) {
-            response = "我目前沒辦法幫你查實時天氣，建議你看看窗外或查看氣象 App 喔！";
+            response = "好的，那就不打擾你了，祝你有個美好的一天！";
         }
         else {
-            response = "我明白你的意思了。雖然這部分我還在學習，但我會記下來。";
+            response = "我聽到了。雖然這部分我還在學習怎麼回覆得更好，但我會一直都在這裡。";
         }
 
-        setTimeout(() => addBubble(response, 'ai'), 400);
+        // 模擬思考延遲
+        setTimeout(() => addBubble(response, 'ai'), 450);
     }
 
     function addBubble(text, type) {
