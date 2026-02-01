@@ -2,207 +2,172 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=440, user-scalable=no, viewport-fit=cover">
-    <title>AI Core Professional Edition</title>
+    <meta name="viewport" content="width=440, height=956, user-scalable=no">
+    <title>AI Core - Chat Mode</title>
     <style>
-        :root { 
-            --ai-purple: #5856D6; 
-            --system-bg: #FFFFFF; 
-            --text-main: #1C1C1E;
-            --text-secondary: #8E8E93;
+        :root {
+            --user-bg: #212121;
+            --ai-bg: #f7f7f8;
+            --text-main: #374151;
+            --bg: #ffffff;
         }
-        body { 
-            margin: 0; 
-            background: #000000; 
-            display: flex; 
-            justify-content: center; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+
+        body {
+            margin: 0; padding: 0; background: #333;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; font-family: -apple-system, system-ui, sans-serif;
         }
-        .app { 
-            width: 440px; 
-            height: 100vh; 
-            background: var(--system-bg); 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+
+        /* 嚴格執行 440 x 956 框架 */
+        .app-container {
+            width: 440px; height: 956px;
+            background: var(--bg); display: flex; flex-direction: column;
+            position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.5);
         }
-        .status-bar { 
-            padding: 15px 20px; 
-            font-size: 11px; 
-            color: var(--text-secondary); 
-            border-bottom: 1px solid #E5E5EA; 
-            display: flex; 
-            justify-content: space-between; 
-            letter-spacing: 1px;
+
+        /* 頂部導航 */
+        .nav-bar {
+            height: 60px; display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid #ececf1; font-weight: 600; color: #444;
+            flex-shrink: 0;
         }
-        .chat-container { 
-            flex: 1; 
-            padding: 20px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
+
+        /* 對話容器 */
+        .chat-area {
+            flex: 1; overflow-y: auto; padding: 20px 0;
+            display: flex; flex-direction: column; gap: 24px;
+            scrollbar-width: none; /* 隱藏滾動條 */
         }
-        .message-bubble { 
-            max-width: 80%; 
-            padding: 12px 16px; 
-            border-radius: 20px; 
-            font-size: 16px; 
-            line-height: 1.5; 
+        .chat-area::-webkit-scrollbar { display: none; }
+
+        /* 訊息氣泡 */
+        .msg-row { display: flex; width: 100%; padding: 0 15px; box-sizing: border-box; }
+        .msg-row.user { justify-content: flex-end; }
+        
+        .bubble {
+            max-width: 85%; padding: 12px 18px; font-size: 16px; line-height: 1.5;
             word-wrap: break-word;
         }
-        .ai-message { 
-            background: #F2F2F7; 
-            color: var(--text-main); 
-            align-self: flex-start; 
-            border-bottom-left-radius: 4px; 
+        
+        .ai .bubble {
+            background: var(--ai-bg); color: var(--text-main);
+            border-radius: 18px 18px 18px 4px; border: 1px solid #e5e5e5;
         }
-        .user-message { 
-            background: var(--ai-purple); 
-            color: #FFFFFF; 
-            align-self: flex-end; 
-            border-bottom-right-radius: 4px; 
+        
+        .user .bubble {
+            background: var(--user-bg); color: #fff;
+            border-radius: 18px 18px 4px 18px;
         }
-        .input-interface { 
-            padding: 20px; 
-            border-top: 1px solid #E5E5EA; 
-            display: flex; 
-            gap: 12px; 
-            background: #FFFFFF; 
+
+        /* 底部輸入框 */
+        .input-zone {
+            padding: 20px; border-top: 1px solid #ececf1;
+            background: white; flex-shrink: 0;
         }
-        .text-input { 
-            flex: 1; 
-            border: 1px solid #D1D1D6; 
-            border-radius: 24px; 
-            padding: 12px 20px; 
-            outline: none; 
-            font-size: 16px; 
-            transition: border-color 0.2s;
+
+        .input-container {
+            display: flex; align-items: center; background: #fff;
+            border: 1px solid #d9d9e3; border-radius: 12px;
+            padding: 8px 12px; box-shadow: 0 0 10px rgba(0,0,0,0.05);
         }
-        .text-input:focus {
-            border-color: var(--ai-purple);
+
+        input {
+            flex: 1; border: none; outline: none; padding: 10px;
+            font-size: 16px; color: var(--text-main);
         }
-        .send-button { 
-            background: var(--ai-purple); 
-            color: #FFFFFF; 
-            border: none; 
-            padding: 0 24px; 
-            border-radius: 24px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            font-size: 15px;
+
+        .send-btn {
+            width: 32px; height: 32px; background: #212121; color: white;
+            border: none; border-radius: 6px; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        .send-btn:disabled { background: #d9d9e3; }
+
+        .latency-hint {
+            text-align: center; font-size: 11px; color: #acacbe; margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
-<div class="app">
-    <div class="status-bar">
-        <span>CORE VERSION 2.5.0</span>
-        <span id="latency-display">LATENCY: 0.00ms</span>
+<div class="app-container">
+    <div class="nav-bar">AI Core 3.2</div>
+
+    <div id="chatArea" class="chat-area">
+        <div class="msg-row ai">
+            <div class="bubble">你好！我是你的 AI 助手。你可以隨意跟我聊天，或者讓我幫你計算。</div>
+        </div>
     </div>
 
-    <div id="chat-stage" class="chat-container">
-        <div class="message-bubble ai-message">核心系統初始化完成。雙軌邏輯引擎已就緒。</div>
-    </div>
-
-    <div class="input-interface">
-        <input type="text" id="user-input-field" placeholder="輸入指令或訊息..." autocomplete="off">
-        <button id="execute-command" onclick="processInteraction()">發送</button>
+    <div class="input-zone">
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="傳送訊息..." autocomplete="off" onkeydown="if(event.key==='Enter') sendMessage()">
+            <button class="send-btn" onclick="sendMessage()">↑</button>
+        </div>
+        <div id="latency" class="latency-hint">回應速度：0ms</div>
     </div>
 </div>
 
 <script>
-    const VOCABULARY_DATABASE = { 
-        "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, 
-        "我": 7573, "是": 3741, "專": 1174820, "業": 22174 
-    };
-    
-    const REVERSE_DECODER = { 
-        "36452": "哈", "1746,235": "囉", "12942": "你", "8021": "好", 
-        "7573": "我", "3741": "是", "1174820": "專", "22174": "業" 
-    };
+    const VOCAB = { "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, "專": 1174820, "業": 22174 };
+    const DECODER = { "36452": "哈", "1746,235": "囉", "12942": "你", "8021": "好", "7573": "我", "3741": "是" };
 
-    document.getElementById('user-input-field').addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') { processInteraction(); }
-    });
+    function sendMessage() {
+        const start = performance.now();
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
 
-    function processInteraction() {
-        const startTime = performance.now();
-        const inputElement = document.getElementById('user-input-field');
-        const userInput = inputElement.value.trim();
+        addBubble(text, 'user');
+        input.value = '';
+
+        // --- 核心邏輯處理 ---
         
-        if (userInput === "") return;
+        // 1. Token 解析
+        const inTokens = text.split('').map(c => VOCAB[c] || 0);
+        console.log("Tokens:", inTokens);
 
-        appendMessage(userInput, 'user-message');
-        inputElement.value = '';
+        // 2. 雙軌回覆 (Token 與 自然語言計算)
+        let response = "";
 
-        const inputTokenStream = userInput.split('').map(character => VOCABULARY_DATABASE[character] || 0);
-        console.log("Input Token Stream:", inputTokenStream);
-
-        let outputTokenStream = [];
-        let systemResponseText = "";
-
-        if (inputTokenStream.includes(36452) && inputTokenStream.includes("1746,235")) {
-            outputTokenStream = [12942, 8021, 36452, "1746,235"];
+        // 自然語言計算邏輯
+        const nums = text.match(/\d+(\.\d+)?/g);
+        if (nums && nums.length >= 2 && (text.includes("算") || text.includes("加") || text.includes("跟") || text.includes("和"))) {
+            const sum = nums.reduce((a, b) => parseFloat(a) + parseFloat(b));
+            response = `根據計算，${nums.join(' 與 ')} 的結果是 ${sum}。`;
         } 
-        else if (inputTokenStream.includes(1174820)) {
-            outputTokenStream = [7573, 3741, 1174820, 22174];
-        } 
-        else if (userInput.includes("數字炸彈") || userInput.includes("遊戲")) {
-            systemResponseText = "模式切換：數字炸彈遊戲邏輯已在後台準備，請輸入起始數字。";
+        // 文字觸發 (你可以在這裡加「很多」)
+        else if (text.includes("早") || text.includes("安")) {
+            response = "早安！今天有什麼我可以幫你的嗎？";
         }
-        else if (userInput.includes("你是誰") || userInput.includes("身份")) {
-            systemResponseText = "我是由開發者定義的 AI Core 運算架構，目前運行於雙軌並行模式。";
+        else if (text.includes("誰")) {
+            response = "我是 AI Core，一個基於 Token 運作的輕量化核心。";
         }
-        else if (userInput.includes("早安") || userInput.includes("午安") || userInput.includes("晚安")) {
-            systemResponseText = "時段識別成功。祝您運算愉快。";
+        else if (text.includes("厲害") || text.includes("棒")) {
+            response = "謝謝誇獎！我會繼續優化我的 Token 運算邏輯。";
         }
-        else if (userInput.includes("功能") || userInput.includes("指令")) {
-            systemResponseText = "目前支援清單：1.Token 編解碼 2.萬能數學運算 3.關鍵字模糊匹配 4.系統性能監控。";
+        else if (inTokens.includes(36452)) {
+            response = "你好哈囉！偵測到問候代碼 36452。";
         }
-        else if (userInput.includes("強") || userInput.includes("厲害") || userInput.includes("棒")) {
-            systemResponseText = "正面權重已紀錄。感謝對核心邏輯的肯定。";
-        }
-        else if (userInput.includes("笨") || userInput.includes("爛") || userInput.includes("錯")) {
-            systemResponseText = "負面權重識別。請開發者評估是否需要手動修正 Token 字典。";
-        }
-        else if (userInput.includes("天氣") || userInput.includes("時間")) {
-            systemResponseText = "外部資訊 API 目前尚未掛載，僅支援本地邏輯運算。";
-        }
-        else if (userInput.includes("再見") || userInput.includes("掰掰")) {
-            systemResponseText = "程序準備進入休眠模式，隨時等待下次喚醒。";
-        }
-        else if (/[0-9\+\-\*\/]/.test(userInput)) {
-            try { 
-                const mathResult = eval(userInput.replace('=', '')); 
-                systemResponseText = "數學引擎運算結果：" + mathResult; 
-            } catch (error) { 
-                systemResponseText = "算式語法解析錯誤。"; 
-            }
-        } 
         else {
-            systemResponseText = "序列分析完成。目前字典庫無此對應，已將數據片段存入待訓練集。";
+            response = "我收到了你的訊息。目前此內容尚未完全定義 Token，但我已經將它記錄下來了。";
         }
 
-        const finalOutputString = outputTokenStream.length > 0 
-            ? outputTokenStream.map(id => REVERSE_DECODER[id] || "？").join('') 
-            : systemResponseText;
-
+        // --- 模擬 AI 思考感 ---
         setTimeout(() => {
-            appendMessage(finalOutputString, 'ai-message');
-            const endTime = performance.now();
-            document.getElementById('latency-display').innerText = "LATENCY: " + (endTime - startTime).toFixed(2) + "ms";
-        }, 30);
+            addBubble(response, 'ai');
+            document.getElementById('latency').innerText = `回應速度：${(performance.now() - start).toFixed(2)}ms`;
+        }, 300);
     }
 
-    function appendMessage(text, className) {
-        const chatStage = document.getElementById('chat-stage');
-        const messageBubble = document.createElement('div');
-        messageBubble.className = "message-bubble " + className;
-        messageBubble.innerText = text;
-        chatStage.appendChild(messageBubble);
-        chatStage.scrollTop = chatStage.scrollHeight;
+    function addBubble(text, type) {
+        const area = document.getElementById('chatArea');
+        const row = document.createElement('div');
+        row.className = `msg-row ${type}`;
+        row.innerHTML = `<div class="bubble">${text}</div>`;
+        area.appendChild(row);
+        area.scrollTop = area.scrollHeight;
     }
 </script>
 
