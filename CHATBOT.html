@@ -1,143 +1,317 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=440, height=956, user-scalable=no">
-    <title>AI Chat</title>
-    <style>
-        :root { --user-bg: #212121; --ai-bg: #f7f7f8; --text: #374151; }
-        body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
-        /* 440x956 固定框架 */
-        .app-container { 
-            width: 440px; height: 956px; background: #fff; 
-            display: flex; flex-direction: column; overflow: hidden; 
-            box-shadow: 0 0 40px rgba(0,0,0,0.5); position: relative;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UI Layout</title>
 
-        /* 頂部導航欄 */
-        .nav-bar { 
-            height: 60px; display: flex; align-items: center; justify-content: center; 
-            border-bottom: 1px solid #eee; font-weight: 600; color: #444; flex-shrink: 0;
-        }
+<style>
+body {
+  margin: 0;
+  font-family: monospace;
+  background: #f5f5f5;
+  overflow: hidden;
+}
 
-        /* 對話區域 */
-        .chat-area { 
-            flex: 1; overflow-y: auto; padding: 20px 0; 
-            display: flex; flex-direction: column; gap: 20px; 
-            scrollbar-width: none; 
-        }
-        .chat-area::-webkit-scrollbar { display: none; }
+.frame {
+  position: absolute;
+  width: 2560px;
+  height: 1440px;
+  background: #FFFFFF;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
 
-        /* 訊息列 */
-        .msg-row { display: flex; width: 100%; padding: 0 15px; box-sizing: border-box; }
-        .msg-row.user { justify-content: flex-end; }
-        .bubble { max-width: 85%; padding: 12px 18px; font-size: 16px; line-height: 1.5; word-wrap: break-word; }
-        
-        .ai .bubble { 
-            background: var(--ai-bg); color: var(--text); 
-            border-radius: 18px 18px 18px 4px; border: 1px solid #e5e5e5; 
-        }
-        
-        .user .bubble { 
-            background: var(--user-bg); color: #fff; 
-            border-radius: 18px 18px 4px 18px; 
-        }
+.rectangle-3 {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 52px;
+  height: 1440px;
+}
 
-        /* 底部輸入區 */
-        .input-zone { padding: 20px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
-        .input-container { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 12px; padding: 8px 12px; }
-        input { flex: 1; border: none; outline: none; padding: 10px; font-size: 16px; background: transparent; }
-        .send-btn { 
-            width: 32px; height: 32px; background: #212121; color: white; 
-            border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-    </style>
+.input-bar {
+  position: absolute;
+  left: 921px;
+  top: 601px;
+  width: 779px;
+  height: 66px;
+}
+
+.rectangle-1 {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.ellipse-1 {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  left: 724px;
+  top: 11px;
+  cursor: pointer;
+}
+
+.mic {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 693px;
+  top: 21px;
+}
+
+.add {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 17px;
+  top: 17px;
+}
+
+.input-field {
+  position: absolute;
+  left: 49px;
+  top: 11px;
+  width: 620px;
+  height: 36px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  background: transparent;
+}
+
+.input-bar.active {
+  top: 1352px;
+}
+
+.rectangle-5 {
+  position: absolute;
+  left: 1631px;
+  top: 8px;
+
+  min-width: 60px;
+  max-width: 500px;
+  width: fit-content;
+  height: auto;
+
+  padding: 10px 15px;
+  box-sizing: border-box;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 5;
+}
+
+.rectangle-5 svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.rectangle-5-text {
+  font-size: 15px;
+  color: #000;
+
+  white-space: nowrap !important;
+  word-break: keep-all;
+  overflow: visible;
+
+  display: inline-block;
+  flex-shrink: 0;
+
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+
+.reply-text {
+  position: absolute;
+  left: 923px;
+  top: 97px;
+
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 18px;
+
+  color: #000000;
+
+  white-space: nowrap;
+  width: auto;
+
+  z-index: 10;
+}
+
+body.active .rectangle-5 {
+  display: flex;
+}
+
+</style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="nav-bar">AI 助手</div>
-    <div id="chatArea" class="chat-area">
-        <div class="msg-row ai"><div class="bubble">你好！今天有什麼我可以幫你的嗎？</div></div>
+<div class="frame">
+
+  <div class="rectangle-5">
+    <div class="rectangle-5-text"></div>
+    <svg width="100%" height="100%" viewBox="0 0 100 44" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" rx="22" fill="#F4F4F4"/>
+    </svg>
+  </div>
+
+  <div class="rectangle-3">
+    <svg width="52" height="1440" viewBox="0 0 52 1440" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <mask id="path-1-inside-1_1_40" fill="white">
+        <path d="M0 0H52V1440H0V0Z"/>
+      </mask>
+      <path d="M0 0H52V1440H0V0Z" fill="white"/>
+      <path d="M52 0H51V1440H52H53V0H52Z" fill="#F3F3F3" mask="url(#path-1-inside-1_1_40)"/>
+    </svg>
+  </div>
+
+  <div class="input-bar">
+
+    <div class="rectangle-1">
+      <svg width="779" height="66" viewBox="0 0 779 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g filter="url(#filter0_d_1_4)">
+          <rect x="4" width="771" height="58" rx="29" fill="white"/>
+          <rect x="4.5" y="0.5" width="770" height="57" rx="28.5" stroke="#E9E9E9"/>
+        </g>
+        <defs>
+          <filter id="filter0_d_1_4" x="0" y="0" width="779" height="66" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+            <feOffset dy="4"/>
+            <feGaussianBlur stdDeviation="2"/>
+            <feComposite in2="hardAlpha" operator="out"/>
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_4"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_4" result="shape"/>
+          </filter>
+        </defs>
+      </svg>
     </div>
-    <div class="input-zone">
-        <div class="input-container">
-            <input type="text" id="userInput" placeholder="傳送訊息..." autocomplete="off" onkeydown="if(event.key==='Enter') sendMessage()">
-            <button class="send-btn" onclick="sendMessage()">↑</button>
-        </div>
+
+    <div class="add">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 13H5V11H11V5H13V11H19V13H13V19H11V13Z" fill="black"/>
+      </svg>
     </div>
+
+    <input class="input-field" type="text" placeholder="輸入文字..." />
+
+    <div class="mic">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.6667 6.66669V8.00002C12.6667 9.2377 12.175 10.4247 11.2999 11.2999C10.4247 12.175 9.23772 12.6667 8.00004 12.6667M8.00004 12.6667C6.76236 12.6667 5.57538 12.175 4.70021 11.2999C3.82504 10.4247 3.33337 9.2377 3.33337 8.00002V6.66669M8.00004 12.6667V15.3334M5.33337 15.3334H10.6667M8.00004 0.666687C7.46961 0.666687 6.9609 0.877401 6.58583 1.25247C6.21075 1.62755 6.00004 2.13625 6.00004 2.66669V8.00002C6.00004 8.53045 6.21075 9.03916 6.58583 9.41423C6.9609 9.78931 7.46961 10 8.00004 10C8.53047 10 9.03918 9.78931 9.41425 9.41423C9.78933 9.03916 10 8.53045 10 8.00002V2.66669C10 2.13625 9.78933 1.62755 9.41425 1.25247C9.03918 0.877401 8.53047 0.666687 8.00004 0.666687Z" stroke="black" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="ellipse-1">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="18" cy="18" r="18" fill="black"/>
+      </svg>
+    </div>
+
+  </div>
+
+  <div class="reply-text"></div>
+
 </div>
 
 <script>
-    // 預留的 Token 字典
-    const VOCAB = { "哈": 36452, "囉": "1746,235", "你": 12942, "好": 8021, "專": 1174820, "業": 22174 };
+const sendBtn = document.querySelector('.ellipse-1');
+const input = document.querySelector('.input-field');
+const inputBar = document.querySelector('.input-bar');
+const reply = document.querySelector('.reply-text');
+const display = document.querySelector('.rectangle-5-text');
 
-    function sendMessage() {
-        const input = document.getElementById('userInput');
-        const text = input.value.trim();
-        if (!text) return;
+const tokenMap = {
+  "最":1, "近":2, "地":3, "震":4, "今":5, "天":6,
+  "統":7, "計":8, "海":9, "嘯":10, "全":11, "台":12,
+  "分":13, "布":14, "圖":15, "幫":16, "我":17, "寫":18,
+  "H":19, "T":20, "M":21, "L":22, "目":23, "前":24,
+  "沒":25, "有":26, "警":27, "報":28, "。":29,
+  "請":38, "收":39, "下":40, "確":41, "認":42, "注":43,
+  "意":44, "安":45, "全":46, "！":47,
+  "哈":202, "囉":203, "記":204, "得":205, "哦":206, "～":207,
+  "你":301, "好":302, "啊":303, "氣":304, "是":305, "的":306, "，":307,
+  "嗨":401, "早":402, "安":403, "晚":404, "午":405,
+  "h":411, "e":412, "l":413, "o":414, "i":415,
+  "喂":408, "在":409, "嗎":410
+};
 
-        addBubble(text, 'user');
-        input.value = '';
+const reverseMap = Object.fromEntries(Object.entries(tokenMap).map(([k,v])=>[v,k]));
 
-        // 後台 Token 靜默處理
-        const tokens = text.split('').map(c => VOCAB[c] || 0);
-        console.log("Token Stream:", tokens);
+function has(tokens, ...targets) {
+  return targets.every(t => tokens.includes(t));
+}
 
-        let response = "";
+function tokenToText(arr) {
+  return arr.map(t => reverseMap[t] || '').join('');
+}
 
-        // 1. 自然語言計算邏輯
-        const nums = text.match(/\d+(\.\d+)?/g);
-        if (nums && nums.length >= 2 && (text.includes("算") || text.includes("加") || text.includes("跟") || text.includes("和"))) {
-            const sum = nums.reduce((a, b) => parseFloat(a) + parseFloat(b));
-            response = `好的，我幫你算好了，結果是 ${sum}。`;
-        } 
-        
-        // 2. 生活化感性回覆 (一般人語氣)
-        else if (text.includes("好想睡") || text.includes("想睡覺")) {
-            response = "累了嗎？如果真的撐不住，就先閉上眼睛休息個 15 分鐘吧，小睡一下效果通常很好喔。";
-        }
-        else if (text.includes("喝咖啡")) {
-            const hour = new Date().getHours();
-            // 傍晚 4 點後建議不要喝
-            if (hour >= 16 || hour < 5) {
-                response = "現在這個時間喝咖啡，可能會讓你晚上翻來覆去睡不著呢。要不要換成溫開水，或是起來走動一下提提神？";
-            } else {
-                response = "這時間來杯咖啡提神挺不錯的！不過記得適量就好，也要多喝點水喔。";
-            }
-        }
-        else if (text.includes("怎麼辦")) {
-            response = "別擔心，我們可以先深呼吸一下。你是因為太累了在煩惱，還是有其他事情讓你困擾呢？";
-        }
-        else if (text.includes("哈囉") || text.includes("你好")) {
-            response = "你好啊！很高興能陪你聊天。";
-        }
-        else if (text.includes("你是誰")) {
-            response = "我是你的個人智慧助手，隨時可以幫你處理簡單的任務或陪你聊聊天。";
-        }
-        else if (text.includes("謝謝") || text.includes("感謝")) {
-            response = "不客氣，能幫上忙我也很開心。";
-        }
-        else if (text.includes("再見") || text.includes("拜拜")) {
-            response = "好的，那就不打擾你了，祝你有個美好的一天！";
-        }
-        else {
-            response = "我聽到了。雖然這部分我還在學習怎麼回覆得更好，但我會一直都在這裡。";
-        }
+function typeText(el, text, speed = 80) {
+  el.textContent = '';
+  let i = 0;
+  const timer = setInterval(() => {
+    el.textContent += text[i];
+    i++;
+    if (i >= text.length) clearInterval(timer);
+  }, speed);
+}
 
-        // 模擬思考延遲
-        setTimeout(() => addBubble(response, 'ai'), 450);
+function msg(text) {
+  typeText(reply, text, 80);
+}
+
+function send(){
+  const t = input.value.trim();
+  if(!t) return;
+
+  input.value = '';
+  inputBar.classList.add('active');
+  document.body.classList.add('active');
+
+  display.textContent = t;
+
+  let tokens = [];
+  for(let c of t){ if(tokenMap[c]) tokens.push(tokenMap[c]); }
+
+  if(has(tokens, 202, 203) || has(tokens, 301, 302) || has(tokens, 401) || has(tokens, 402) || has(tokens, 403) || has(tokens, 404) || has(tokens, 405) || has(tokens, 411, 415) || has(tokens, 411, 412, 413, 414) || has(tokens, 402, 403)){
+    let base = [301,302];
+    if(Math.random()<0.3){
+      base.push(303);
     }
 
-    function addBubble(text, type) {
-        const area = document.getElementById('chatArea');
-        const row = document.createElement('div');
-        row.className = `msg-row ${type}`;
-        row.innerHTML = `<div class="bubble">${text}</div>`;
-        area.appendChild(row);
-        area.scrollTop = area.scrollHeight;
+    if(has(tokens, 5,6,304,302)){
+      if(base.length > 0){
+        base = base.concat([307]);
+      }
+      base = base.concat([305,306]);
     }
+
+    // 最後加句號
+    if(base[base.length - 1] !== 29){
+      base = base.concat([29]);
+    }
+
+    msg(tokenToText(base));
+  } else {
+    reply.textContent = '';
+  }
+}
+
+sendBtn.addEventListener('click', send);
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') send();
+});
 </script>
 </body>
 </html>
