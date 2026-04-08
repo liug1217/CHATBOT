@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CHATBOT</title>
+<title>UI Layout</title>
 
 <style>
 body {
@@ -284,7 +284,18 @@ function send(){
   let tokens = [];
   for(let c of t){ if(tokenMap[c]) tokens.push(tokenMap[c]); }
 
-  if(has(tokens, 202, 203) || has(tokens, 301, 302) || has(tokens, 401) || has(tokens, 402) || has(tokens, 403) || has(tokens, 404) || has(tokens, 405) || has(tokens, 411, 415) || has(tokens, 411, 412, 413, 414) || has(tokens, 402, 403)){
+  // 今天天氣好好（單獨回覆）
+  if(has(tokens, 5,6,304,302)){
+    let base = [305,306];
+
+    // 最後加句號
+    if(base[base.length - 1] !== 29){
+      base = base.concat([29]);
+    }
+
+    msg(tokenToText(base));
+  }
+  else if(has(tokens, 202, 203) || has(tokens, 301, 302) || has(tokens, 401) || has(tokens, 402) || has(tokens, 403) || has(tokens, 404) || has(tokens, 405) || has(tokens, 411, 415) || has(tokens, 411, 412, 413, 414) || has(tokens, 402, 403)){
     let base = [301,302];
     if(Math.random()<0.3){
       base.push(303);
