@@ -244,7 +244,10 @@ const tokenMap = {
   "你":301, "好":302, "啊":303, "氣":304, "是":305, "的":306, "，":307,
   "嗨":401, "早":402, "安":403, "晚":404, "午":405,
   "h":411, "e":412, "l":413, "o":414, "i":415,
-  "喂":408, "在":409, "嗎":410
+  "喂":408, "在":409, "嗎":410,
+  "很":500, "高":501, "興":502, "見":503, "到":504,
+  "過":505, "怎":506, "麼":507, "樣":508,
+  "真":509, "不":510, "錯":511, "感":512, "覺":513, "舒":514, "服":515
 };
 
 const reverseMap = Object.fromEntries(Object.entries(tokenMap).map(([k,v])=>[v,k]));
@@ -288,7 +291,15 @@ function send(){
   if(has(tokens, 5,6,304,302)){
     let base = [305,306];
 
-    // 最後加句號
+    // 天氣延伸句（隨機）
+    if(Math.random()<0.5){
+      base = base.concat([307]);
+      let extra = Math.random()<0.5 
+        ? [5,6,304,509,306,511]   // 今天天氣真的不錯
+        : [512,513,514,515];      // 感覺很舒服
+      base = base.concat(extra);
+    }
+
     if(base[base.length - 1] !== 29){
       base = base.concat([29]);
     }
@@ -301,6 +312,15 @@ function send(){
       base.push(303);
     }
 
+    // 問候延伸句（隨機）
+    if(Math.random()<0.5){
+      base = base.concat([307]);
+      let extra = Math.random()<0.5 
+        ? [500,501,502,503,504,301]   // 很高興見到你
+        : [6,505,306,506,507,508];    // 今天過得怎麼樣
+      base = base.concat(extra);
+    }
+
     if(has(tokens, 5,6,304,302)){
       if(base.length > 0){
         base = base.concat([307]);
@@ -308,7 +328,6 @@ function send(){
       base = base.concat([305,306]);
     }
 
-    // 最後加句號
     if(base[base.length - 1] !== 29){
       base = base.concat([29]);
     }
