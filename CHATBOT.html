@@ -508,6 +508,7 @@ frame.addEventListener("click", (e) => {
 
 <script>
 // ===== 即時時鐘（每秒更新） =====
+// ===== 即時時鐘（每秒更新，但僅在送出後顯示） =====
 function startClock() {
   const rect7 = document.getElementById("rect7");
   const timeText = document.getElementById("timeText");
@@ -522,10 +523,7 @@ function startClock() {
       timeText.textContent = `${h}:${m}:${s}`;
     }
 
-    // 只要曾經顯示過就保持更新
-    if (rect7 && rect7.style.display === "flex") {
-      rect7.style.display = "flex";
-    }
+    // 不再強制顯示，完全交由 send() 控制
   }
 
   setInterval(update, 1000);
