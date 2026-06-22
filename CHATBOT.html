@@ -565,6 +565,69 @@ function send() {
     replyParts.push(base[Math.floor(Math.random() * base.length)] + symbol);
   }
 
+  // ===== 生日 =====
+  if (text.includes("生日快樂") || text.includes("今天生日") || text.includes("我生日")) {
+    const base = ["生日快樂!", "祝你生日快樂", "希望你今年順順利利"];
+    let symbol = Math.random() < 0.8 ? ["🎉", "🎂", "！"][Math.floor(Math.random() * 3)] : "";
+    replyParts.push(base[Math.floor(Math.random() * base.length)] + symbol);
+  }
+
+  // ===== 抱歉/對不起 =====
+  if (text.includes("對不起") || text.includes("抱歉")) {
+    const base = ["沒關係的", "不用在意啦", "沒事的,別放在心上"];
+    replyParts.push(base[Math.floor(Math.random() * base.length)]);
+  }
+
+  // ===== 肚子餓 =====
+  if (text.includes("好餓") || text.includes("肚子餓") || text.includes("肚子好餓")) {
+    const base = ["要不要去吃點東西", "餓的話記得去吃飯喔", "我聽到你的肚子在叫了"];
+    let symbol = Math.random() < 0.7 ? ["～", "🍜", "！"][Math.floor(Math.random() * 3)] : "";
+    replyParts.push(base[Math.floor(Math.random() * base.length)] + symbol);
+  }
+
+  // ===== 感冒/不舒服 =====
+  if (text.includes("我感冒了") || text.includes("不舒服") || text.includes("生病了") || text.includes("我生病")) {
+    const base = ["要多休息,記得喝水", "趕快去看醫生比較安全", "希望你早點好起來"];
+    replyParts.push(base[Math.floor(Math.random() * base.length)]);
+  }
+
+  // ===== 緊張/壓力大 =====
+  if (text.includes("好緊張") || text.includes("壓力好大") || text.includes("壓力很大") || text.includes("要考試了")) {
+    const base = ["放輕鬆,你已經很努力了", "深呼吸一下,慢慢來", "相信自己,你做得到的"];
+    replyParts.push(base[Math.floor(Math.random() * base.length)]);
+  }
+
+  // ===== 放假 =====
+  if (text.includes("放假真好") || text.includes("好想放假") || text.includes("終於放假")) {
+    const base = ["放假要好好休息", "好好享受假期吧", "放假真的很幸福"];
+    let symbol = Math.random() < 0.7 ? ["～", "🎈", "！"][Math.floor(Math.random() * 3)] : "";
+    replyParts.push(base[Math.floor(Math.random() * base.length)] + symbol);
+  }
+
+  // ===== 想出去玩 =====
+  if (text.includes("好想出去玩") || text.includes("想去旅行") || text.includes("想出去玩") || text.includes("好想旅行")) {
+    const base = ["哪裡都很適合放鬆一下", "出去走走心情會變好", "說不定可以規劃個小旅行"];
+    replyParts.push(base[Math.floor(Math.random() * base.length)]);
+  }
+
+  // ===== 真的假的 =====
+  if (text === "真的嗎" || text === "真假" || text === "真的假的") {
+    const base = ["真的呀", "千真萬確", "我沒有騙你"];
+    replyParts.push(base[Math.floor(Math.random() * base.length)]);
+  }
+
+  // ===== 嘆氣 =====
+  if (text === "唉" || text.includes("嘆氣") || text === "唉唉") {
+    const base = ["怎麼了,心情不好嗎", "嘆氣了呢,發生什麼事了", "我在這陪你"];
+    replyParts.push(base[Math.floor(Math.random() * base.length)]);
+  }
+
+  // ===== 上班/下班 =====
+  if (text.includes("要上班了") || text.includes("好想下班") || text.includes("還在上班") || text.includes("好想上班")) {
+    const base = ["辛苦了,加油!", "快下班了,堅持一下", "上班辛苦,記得照顧自己"];
+    replyParts.push(base[Math.floor(Math.random() * base.length)]);
+  }
+
   // ===== fallback =====
   if (replyParts.length === 0) {
     replyParts.push("我收到你說：" + text);
