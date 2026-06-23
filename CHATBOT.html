@@ -190,6 +190,42 @@
       min-width: 0;
       width: 100%;
     }
+    /* 模型下載進度條 */
+    .model-loading-bar {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 400px;
+      top: 16px;
+      z-index: 200;
+      display: none;
+    }
+
+    .model-loading-bar-text {
+      font-family: Inter, sans-serif;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .model-loading-bar-track {
+      width: 100%;
+      height: 6px;
+      background: #EEEEEE;
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .model-loading-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: #000000;
+      border-radius: 100px;
+      transition: width 0.2s ease;
+    }
+
   .sidebar {
       box-sizing: border-box;
       position: absolute;
@@ -226,6 +262,12 @@
 <body>
 
 <div id="frame">
+  <div class="model-loading-bar" id="modelLoadingBar">
+    <div class="model-loading-bar-text" id="modelLoadingBarText">模型下載中... 0%</div>
+    <div class="model-loading-bar-track">
+      <div class="model-loading-bar-fill" id="modelLoadingBarFill"></div>
+    </div>
+  </div>
   <div class="sidebar"></div>
   <div class="rect7" id="rect7">
     <div class="timeText" id="timeText">00:00:00</div>
@@ -300,13 +342,60 @@ function typeText(text, el) {
 // 代價:模型比較小,回答品質有限,第一次使用需要下載模型(可能要等一下)
 let aiPipelinePromise = null;
 
+// 進度條控制
+const modelLoadProgress = {}; // 記錄每個檔案各自的下載進度
+
+function showModelLoadingBar() {
+  document.getElementById("modelLoadingBar").style.display = "block";
+}
+
+function hideModelLoadingBar() {
+  document.getElementById("modelLoadingBar").style.display = "none";
+}
+
+function updateModelLoadingBar(fileName, percent) {
+  modelLoadProgress[fileName] = percent;
+
+  const values = Object.values(modelLoadProgress);
+  const avg = values.length
+    ? Math.round(values.reduce(function (a, b) { return a + b; }, 0) / values.length)
+    : 0;
+
+  document.getElementById("modelLoadingBarFill").style.width = avg + "%";
+  document.getElementById("modelLoadingBarText").textContent = "模型下載中... " + avg + "%";
+
+  if (avg >= 100) {
+    setTimeout(hideModelLoadingBar, 400);
+  }
+}
+
 async function loadAiModel() {
   if (aiPipelinePromise) return aiPipelinePromise;
 
+  showModelLoadingBar();
+
   aiPipelinePromise = (async function () {
     const { pipeline } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3");
-    return await pipeline("text-generation", "onnx-community/Qwen2.5-0.5B-Instruct", { dtype: "q4" });
+    return await pipeline("text-generation", "onnx-community/Qwen2.5-0.5B-Instruct", {
+      dtype: "q4",
+      progress_callback: function (data) {
+        if (!data || !data.file) return;
+
+        if (data.status === "progress" && typeof data.progress === "number") {
+          updateModelLoadingBar(data.file, Math.round(data.progress));
+        } else if (data.status === "done") {
+          updateModelLoadingBar(data.file, 100);
+        }
+      }
+    });
   })();
+
+  try {
+    await aiPipelinePromise;
+    hideModelLoadingBar();
+  } catch (e) {
+    hideModelLoadingBar();
+  }
 
   return aiPipelinePromise;
 }
