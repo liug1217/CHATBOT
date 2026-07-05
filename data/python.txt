@@ -819,4 +819,485 @@ def open_section(title):
 
 with open_section("資料處理"):
     print("正在處理資料...")
-    
+
+
+# 範例:使用 pathlib 處理檔案路徑,比os.path更直觀
+from pathlib import Path
+
+data_dir = Path("data")
+for file in data_dir.glob("*.txt"):
+    print(f"檔名: {file.name}, 大小: {file.stat().st_size} bytes")
+
+
+# 範例:實作簡單的快取裝飾器
+def memoize(func):
+    cache = {}
+    def wrapper(*args):
+        if args not in cache:
+            cache[args] = func(*args)
+        return cache[args]
+    return wrapper
+
+@memoize
+def slow_square(n):
+    import time
+    time.sleep(0.1)  # 模擬耗時運算
+    return n * n
+
+print(slow_square(5))
+print(slow_square(5))  # 第二次會直接從快取取得,不用重新計算
+
+
+# 範例:字串的常見操作整理
+text = "  Hello, World!  "
+print(text.strip())          # 去除頭尾空白
+print(text.lower())          # 轉小寫
+print(text.replace("Hello", "Hi"))  # 取代文字
+print(text.strip().split(","))       # 分割字串
+
+
+# 範例:簡單的環形佇列(circular buffer)實作
+class CircularBuffer:
+    def __init__(self, size):
+        self.size = size
+        self.buffer = [None] * size
+        self.index = 0
+
+    def add(self, item):
+        self.buffer[self.index % self.size] = item
+        self.index += 1
+
+    def get_all(self):
+        return self.buffer
+
+cb = CircularBuffer(3)
+for i in range(5):
+    cb.add(i)
+print(cb.get_all())  # 只會保留最後 3 個值
+
+
+# 範例:使用 __eq__ 和 __hash__ 讓自訂物件可以比較與放進 set
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+p1 = Point(1, 2)
+p2 = Point(1, 2)
+print(p1 == p2)              # True,因為定義了 __eq__
+print(len({p1, p2}))         # 1,因為兩者被視為相同物件
+
+
+# 範例:簡單的滑動視窗演算法,計算固定長度區間的最大總和
+def max_subarray_sum(nums, k):
+    max_sum = sum(nums[:k])
+    window_sum = max_sum
+    for i in range(k, len(nums)):
+        window_sum += nums[i] - nums[i - k]
+        max_sum = max(max_sum, window_sum)
+    return max_sum
+
+print(max_subarray_sum([1, 3, -1, 5, 8, 2], 3))
+
+
+# 範例:使用 sorted 搭配多重排序條件
+students = [
+    {"name": "小明", "grade": "A", "score": 85},
+    {"name": "小華", "grade": "A", "score": 92},
+    {"name": "小美", "grade": "B", "score": 95},
+]
+
+sorted_students = sorted(students, key=lambda s: (s["grade"], -s["score"]))
+for s in sorted_students:
+    print(s["name"], s["grade"], s["score"])
+
+
+# 範例:使用 collections.namedtuple 建立輕量級資料結構
+from collections import namedtuple
+
+Point = namedtuple("Point", ["x", "y"])
+p1 = Point(3, 4)
+print(p1.x, p1.y)
+print(p1)  # 輸出 Point(x=3, y=4)
+
+
+# 範例:簡單的狀態機實作(有限狀態機)
+class TrafficLight:
+    def __init__(self):
+        self.state = "red"
+        self.transitions = {
+            "red": "green",
+            "green": "yellow",
+            "yellow": "red",
+        }
+
+    def next_state(self):
+        self.state = self.transitions[self.state]
+        return self.state
+
+light = TrafficLight()
+for _ in range(4):
+    print(light.next_state())
+
+
+# 範例:使用 __repr__ 讓物件印出時更容易除錯
+class Book:
+    def __init__(self, title, author):
+        self.title = title
+        self.author = author
+
+    def __repr__(self):
+        return f"Book(title={self.title!r}, author={self.author!r})"
+
+books = [Book("三國演義", "羅貫中"), Book("紅樓夢", "曹雪芹")]
+print(books)  # 會清楚印出每本書的標題和作者
+
+
+# 範例:簡單的資料驗證函式集合
+def validate_age(age):
+    if not isinstance(age, int) or age < 0 or age > 150:
+        raise ValueError("年齡必須是0到150之間的整數")
+    return True
+
+def validate_name(name):
+    if not name or not name.strip():
+        raise ValueError("名字不能是空白")
+    return True
+
+try:
+    validate_age(-5)
+except ValueError as e:
+    print(f"驗證失敗: {e}")
+
+
+# 範例:簡單的事件驅動架構,模擬按鈕點擊觸發多個處理函式
+class EventBus:
+    def __init__(self):
+        self.handlers = {}
+
+    def on(self, event_name, handler):
+        self.handlers.setdefault(event_name, []).append(handler)
+
+    def trigger(self, event_name, *args):
+        for handler in self.handlers.get(event_name, []):
+            handler(*args)
+
+bus = EventBus()
+bus.on("click", lambda: print("記錄點擊事件"))
+bus.on("click", lambda: print("更新畫面"))
+bus.trigger("click")
+
+
+# 範例:簡單的檔案批次重新命名工具
+import os
+
+def batch_rename(directory, prefix):
+    for i, filename in enumerate(os.listdir(directory)):
+        old_path = os.path.join(directory, filename)
+        ext = os.path.splitext(filename)[1]
+        new_path = os.path.join(directory, f"{prefix}_{i}{ext}")
+        # os.rename(old_path, new_path)  # 實際重新命名時取消註解
+        print(f"{filename} -> {prefix}_{i}{ext}")
+
+
+# 範例:使用 collections.OrderedDict 保持插入順序(Python3.7+其實一般dict也會保持順序)
+from collections import OrderedDict
+
+od = OrderedDict()
+od["first"] = 1
+od["second"] = 2
+od["third"] = 3
+for key, value in od.items():
+    print(key, value)
+
+
+# 範例:簡單的資料分頁(pagination)邏輯
+def paginate(items, page_size, page_number):
+    start = (page_number - 1) * page_size
+    end = start + page_size
+    return items[start:end]
+
+all_items = list(range(1, 26))
+print(paginate(all_items, page_size=5, page_number=2))  # 輸出第2頁的5筆資料
+
+
+# 範例:簡單的信號量(semaphore)概念示範,控制同時執行的數量限制
+import threading
+
+semaphore = threading.Semaphore(2)  # 最多允許2個同時執行
+
+def worker(name):
+    with semaphore:
+        print(f"{name} 開始執行")
+        import time
+        time.sleep(1)
+        print(f"{name} 執行完畢")
+
+
+# 範例:簡單的觀察者模式應用於庫存通知系統
+class InventorySystem:
+    def __init__(self):
+        self.subscribers = []
+        self.stock = {}
+
+    def subscribe(self, callback):
+        self.subscribers.append(callback)
+
+    def update_stock(self, item, quantity):
+        self.stock[item] = quantity
+        if quantity < 5:
+            for callback in self.subscribers:
+                callback(item, quantity)
+
+def low_stock_alert(item, quantity):
+    print(f"警告: {item} 庫存只剩 {quantity} 件")
+
+inventory = InventorySystem()
+inventory.subscribe(low_stock_alert)
+inventory.update_stock("筆記本", 3)
+
+
+# 範例:簡單的建造者模式(builder pattern)
+class PizzaBuilder:
+    def __init__(self):
+        self.toppings = []
+
+    def add_topping(self, topping):
+        self.toppings.append(topping)
+        return self  # 回傳自己,方便連續呼叫
+
+    def build(self):
+        return f"披薩配料: {', '.join(self.toppings)}"
+
+pizza = PizzaBuilder().add_topping("起司").add_topping("蘑菇").add_topping("培根").build()
+print(pizza)
+
+
+# 範例:簡單的策略模式(strategy pattern),依情況切換不同計算方式
+class DiscountStrategy:
+    def calculate(self, price):
+        raise NotImplementedError
+
+class NoDiscount(DiscountStrategy):
+    def calculate(self, price):
+        return price
+
+class PercentageDiscount(DiscountStrategy):
+    def __init__(self, percent):
+        self.percent = percent
+
+    def calculate(self, price):
+        return price * (1 - self.percent / 100)
+
+def checkout(price, strategy):
+    return strategy.calculate(price)
+
+print(checkout(1000, NoDiscount()))
+print(checkout(1000, PercentageDiscount(20)))
+
+
+# 範例:簡單的責任鏈模式(chain of responsibility)
+class Handler:
+    def __init__(self, successor=None):
+        self.successor = successor
+
+    def handle(self, request):
+        if self.successor:
+            self.successor.handle(request)
+
+class LowLevelSupport(Handler):
+    def handle(self, request):
+        if request == "簡單問題":
+            print("初級客服處理完成")
+        else:
+            super().handle(request)
+
+class HighLevelSupport(Handler):
+    def handle(self, request):
+        if request == "複雜問題":
+            print("資深工程師處理完成")
+        else:
+            super().handle(request)
+
+chain = LowLevelSupport(HighLevelSupport())
+chain.handle("簡單問題")
+chain.handle("複雜問題")
+
+
+# 範例:簡單的物件池(object pool)模式,重複使用物件減少建立成本
+class ConnectionPool:
+    def __init__(self, size):
+        self.pool = [f"連線物件{i}" for i in range(size)]
+        self.in_use = []
+
+    def acquire(self):
+        if not self.pool:
+            raise Exception("目前沒有可用的連線")
+        conn = self.pool.pop()
+        self.in_use.append(conn)
+        return conn
+
+    def release(self, conn):
+        self.in_use.remove(conn)
+        self.pool.append(conn)
+
+pool = ConnectionPool(2)
+c1 = pool.acquire()
+print(f"取得: {c1}")
+pool.release(c1)
+
+
+# 範例:使用 __slots__ 減少物件的記憶體使用量
+class LightPoint:
+    __slots__ = ["x", "y"]
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+p = LightPoint(1, 2)
+print(p.x, p.y)
+# 使用 __slots__ 後,物件不能再動態新增其他屬性,可以節省記憶體
+
+
+# 範例:簡單的資料快照(snapshot)與還原機制
+class Editor:
+    def __init__(self):
+        self.content = ""
+        self.history = []
+
+    def write(self, text):
+        self.history.append(self.content)
+        self.content += text
+
+    def undo(self):
+        if self.history:
+            self.content = self.history.pop()
+
+editor = Editor()
+editor.write("第一句話。")
+editor.write("第二句話。")
+editor.undo()
+print(editor.content)  # 只剩下第一句話
+
+
+# 範例:使用生成器實作簡易的分頁讀取大檔案
+def read_large_file_in_chunks(filepath, chunk_size=1024):
+    with open(filepath, "r", encoding="utf-8") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
+
+
+# 範例:簡單的訪客模式(visitor pattern)
+class Shape:
+    def accept(self, visitor):
+        raise NotImplementedError
+
+class Circle(Shape):
+    def __init__(self, radius):
+        self.radius = radius
+    def accept(self, visitor):
+        return visitor.visit_circle(self)
+
+class Square(Shape):
+    def __init__(self, side):
+        self.side = side
+    def accept(self, visitor):
+        return visitor.visit_square(self)
+
+class AreaVisitor:
+    def visit_circle(self, circle):
+        return 3.14159 * circle.radius ** 2
+    def visit_square(self, square):
+        return square.side ** 2
+
+shapes = [Circle(5), Square(4)]
+visitor = AreaVisitor()
+for shape in shapes:
+    print(shape.accept(visitor))
+
+
+# 範例:簡單的工廠模式(factory pattern)
+class Dog:
+    def speak(self):
+        return "汪汪"
+
+class Cat:
+    def speak(self):
+        return "喵喵"
+
+def animal_factory(kind):
+    animals = {"dog": Dog, "cat": Cat}
+    return animals[kind]()
+
+pet = animal_factory("dog")
+print(pet.speak())
+
+
+# 範例:簡單的裝飾器模式(decorator pattern),動態為物件增加功能
+class Coffee:
+    def cost(self):
+        return 30
+
+class MilkDecorator:
+    def __init__(self, coffee):
+        self.coffee = coffee
+    def cost(self):
+        return self.coffee.cost() + 10
+
+class SugarDecorator:
+    def __init__(self, coffee):
+        self.coffee = coffee
+    def cost(self):
+        return self.coffee.cost() + 5
+
+order = SugarDecorator(MilkDecorator(Coffee()))
+print(order.cost())  # 輸出 45
+
+
+# 範例:簡單的模板方法模式(template method pattern)
+class ReportGenerator:
+    def generate(self):
+        self.load_data()
+        self.process_data()
+        self.export()
+
+    def load_data(self):
+        print("讀取資料中...")
+
+    def process_data(self):
+        raise NotImplementedError
+
+    def export(self):
+        print("匯出報表完成")
+
+class SalesReport(ReportGenerator):
+    def process_data(self):
+        print("處理銷售資料...")
+
+SalesReport().generate()
+
+
+# 範例:簡單的中介軟體(middleware)概念示範
+def logging_middleware(next_handler):
+    def wrapper(request):
+        print(f"收到請求: {request}")
+        result = next_handler(request)
+        print(f"處理完成: {result}")
+        return result
+    return wrapper
+
+def core_handler(request):
+    return f"處理結果_{request}"
+
+handler = logging_middleware(core_handler)
+handler("使用者請求A")
