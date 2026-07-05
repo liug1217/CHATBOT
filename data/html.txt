@@ -665,3 +665,117 @@ function checkStrength() {
     document.getElementById("strengthLabel").textContent = "強度: " + strength;
 }
 </script>
+
+
+<!-- 範例:多步驟表單(step form)進度指示 -->
+<style>
+.step-indicator { display: flex; gap: 8px; margin-bottom: 16px; }
+.step { width: 30px; height: 30px; border-radius: 50%; background: #ddd;
+        display: flex; align-items: center; justify-content: center; }
+.step.active { background: #4caf50; color: white; }
+</style>
+
+<div class="step-indicator">
+    <div class="step active">1</div>
+    <div class="step">2</div>
+    <div class="step">3</div>
+</div>
+<div>第一步:填寫基本資料</div>
+
+
+<!-- 範例:自訂捲軸樣式 -->
+<style>
+.scroll-box {
+    height: 150px;
+    overflow-y: scroll;
+}
+.scroll-box::-webkit-scrollbar {
+    width: 8px;
+}
+.scroll-box::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+</style>
+
+<div class="scroll-box">
+    <p>這是一段很長的內容,需要捲動才能看完全部...</p>
+</div>
+
+
+<!-- 範例:使用 details 和 summary 做簡單的收合內容 -->
+<details>
+    <summary>點我查看更多資訊</summary>
+    <p>這裡是隱藏的詳細內容,點擊上方標題可以展開或收合。</p>
+</details>
+
+
+<!-- 範例:簡單的評論區塊排版 -->
+<style>
+.comment {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ccc;
+}
+.comment-body {
+    flex: 1;
+}
+.comment-author {
+    font-weight: bold;
+}
+</style>
+
+<div class="comment">
+    <div class="comment-avatar"></div>
+    <div class="comment-body">
+        <div class="comment-author">小明</div>
+        <div>這篇文章寫得很清楚,謝謝分享!</div>
+    </div>
+</div>
+
+
+<!-- 範例:使用CSS動畫做簡單的載入指示器 -->
+<style>
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f0f0f0;
+    border-top: 4px solid #4caf50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<div class="spinner"></div>
+
+
+<!-- 範例:簡單的下拉搜尋自動完成 -->
+<input type="text" id="searchInput" placeholder="搜尋水果..." oninput="showSuggestions()">
+<ul id="suggestions"></ul>
+
+<script>
+const fruits = ["蘋果", "香蕉", "橘子", "芭樂", "西瓜", "葡萄"];
+
+function showSuggestions() {
+    const input = document.getElementById("searchInput").value;
+    const list = document.getElementById("suggestions");
+    list.innerHTML = "";
+    if (!input) return;
+    const matches = fruits.filter(f => f.includes(input));
+    matches.forEach(match => {
+        const li = document.createElement("li");
+        li.textContent = match;
+        list.appendChild(li);
+    });
+}
+</script>

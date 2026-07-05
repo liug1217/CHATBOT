@@ -703,3 +703,120 @@ deep = copy.deepcopy(original)
 original["list"].append(4)
 print("淺拷貝:", shallow)  # 會跟著變,因為內部列表是共用的
 print("深拷貝:", deep)     # 不會跟著變,因為完全複製了一份
+
+
+# 範例:使用 typing 模組明確標註型別,提升程式碼可讀性
+from typing import List, Dict, Optional
+
+def get_top_scores(scores: Dict[str, int], top_n: int = 3) -> List[str]:
+    sorted_names = sorted(scores, key=lambda name: scores[name], reverse=True)
+    return sorted_names[:top_n]
+
+def find_user(users: List[dict], user_id: int) -> Optional[dict]:
+    for user in users:
+        if user["id"] == user_id:
+            return user
+    return None
+
+
+# 範例:使用 asyncio 實作簡單的非同步任務
+import asyncio
+
+async def fetch_data(name, delay):
+    print(f"{name} 開始等待 {delay} 秒")
+    await asyncio.sleep(delay)
+    print(f"{name} 完成")
+    return f"{name} 的結果"
+
+async def main():
+    results = await asyncio.gather(
+        fetch_data("任務A", 2),
+        fetch_data("任務B", 1),
+    )
+    print(results)
+
+# asyncio.run(main())  # 在實際程式中呼叫這行來執行
+
+
+# 範例:使用正規表達式提取字串中的數字
+import re
+
+text = "訂單編號12345,總金額為678元"
+numbers = re.findall(r"\d+", text)
+print(numbers)  # 輸出 ['12345', '678']
+
+
+# 範例:實作簡單的圖(graph)結構與深度優先搜尋
+graph = {
+    "A": ["B", "C"],
+    "B": ["D"],
+    "C": ["D"],
+    "D": [],
+}
+
+def dfs(graph, start, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(start)
+    for neighbor in graph[start]:
+        if neighbor not in visited:
+            dfs(graph, neighbor, visited)
+    return visited
+
+print(dfs(graph, "A"))
+
+
+# 範例:使用生成器實作無限序列,搭配 itertools.islice 取出部分結果
+from itertools import islice
+
+def natural_numbers():
+    n = 1
+    while True:
+        yield n
+        n += 1
+
+first_ten = list(islice(natural_numbers(), 10))
+print(first_ten)
+
+
+# 範例:簡單的命令模式(command pattern)
+class Light:
+    def __init__(self):
+        self.is_on = False
+
+    def turn_on(self):
+        self.is_on = True
+        print("燈打開了")
+
+    def turn_off(self):
+        self.is_on = False
+        print("燈關掉了")
+
+class Command:
+    def __init__(self, light, action):
+        self.light = light
+        self.action = action
+
+    def execute(self):
+        if self.action == "on":
+            self.light.turn_on()
+        else:
+            self.light.turn_off()
+
+light = Light()
+Command(light, "on").execute()
+Command(light, "off").execute()
+
+
+# 範例:用 contextlib 快速建立上下文管理器
+from contextlib import contextmanager
+
+@contextmanager
+def open_section(title):
+    print(f"=== 開始: {title} ===")
+    yield
+    print(f"=== 結束: {title} ===")
+
+with open_section("資料處理"):
+    print("正在處理資料...")
+    
