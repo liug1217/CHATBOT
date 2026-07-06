@@ -10,6 +10,7 @@ import torch
 from config import Config
 from tokenizer import CharTokenizer
 from model import GPTModel
+from text_cleanup import truncate_at_next_turn
 
 
 def load_model(config: Config):
@@ -83,7 +84,8 @@ def generate_text(
         repetition_penalty=config.repetition_penalty,
     )
     full_text = tokenizer.decode(out_idx[0].tolist())
-    return full_text[len(wrapped_prompt):] if full_text.startswith(wrapped_prompt) else full_text
+    reply = full_text[len(wrapped_prompt):] if full_text.startswith(wrapped_prompt) else full_text
+    return truncate_at_next_turn(reply)
 
 
 if __name__ == "__main__":

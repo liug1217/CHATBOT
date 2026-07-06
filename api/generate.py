@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from flask import Flask, request, jsonify  # noqa: E402
 from tokenizer import CharTokenizer  # noqa: E402
 from numpy_gpt import NumpyGPT  # noqa: E402
+from text_cleanup import truncate_at_next_turn  # noqa: E402
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
@@ -88,6 +89,7 @@ def api_generate():
         )
         full_text = tokenizer.decode(out_idx)
         reply = full_text[len(wrapped_prompt):] if full_text.startswith(wrapped_prompt) else full_text
+        reply = truncate_at_next_turn(reply)
 
         return jsonify({"reply": reply})
 

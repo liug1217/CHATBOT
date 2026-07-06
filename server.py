@@ -20,6 +20,7 @@ from flask import Flask, request, jsonify, send_from_directory
 
 from config import Config
 from inference import load_model
+from text_cleanup import truncate_at_next_turn
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -90,6 +91,7 @@ def api_generate():
 
         # 只取「新生成」的部分回覆給前端,不要把包裝用的文字也顯示給使用者
         reply = full_text[len(wrapped_prompt):] if full_text.startswith(wrapped_prompt) else full_text
+        reply = truncate_at_next_turn(reply)
 
         return jsonify({"reply": reply})
 

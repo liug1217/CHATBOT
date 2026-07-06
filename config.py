@@ -18,23 +18,23 @@ class Config:
 
     # ------- 資料切分 -------
     train_split: float = 0.9   # 90% 訓練 / 10% 驗證
-    block_size: int = 64      # 模型一次看多長的文字(context length)
+    block_size: int = 96      # 模型一次看多長的文字(context length)
 
     # ------- 模型架構 -------
-    n_embd: int = 64       # embedding 維度
-    n_head: int = 4        # attention head 數量
-    n_layer: int = 4        # transformer block 層數
+    n_embd: int = 128       # embedding 維度
+    n_head: int = 8        # attention head 數量
+    n_layer: int = 6        # transformer block 層數
     dropout: float = 0.1
 
     # ------- 訓練超參數 -------
     batch_size: int = 32
     learning_rate: float = 3e-4
     min_learning_rate: float = 3e-5   # cosine 衰減後的最低學習率
-    warmup_iters: int = 100           # 前 N 步線性 warmup,避免一開始梯度過大
-    max_iters: int = 2000
+    warmup_iters: int = 150           # 前 N 步線性 warmup,避免一開始梯度過大
+    max_iters: int = 4000
     weight_decay: float = 0.01        # AdamW 的權重衰減,抑制過擬合
     grad_clip: float = 1.0            # 梯度裁剪上限,避免梯度爆炸(0 表示不裁剪)
-    eval_interval: int = 100   # 每多少步驟評估一次
+    eval_interval: int = 200   # 每多少步驟評估一次
     eval_iters: int = 10       # 評估時取多少個 batch 平均
 
     # ------- Checkpoint / 續訓練 -------
@@ -47,15 +47,15 @@ class Config:
     # 而不是像純接龍一樣不分青紅皂白地接續所有文字。
     sft_data_path: str = "sft_data.jsonl"   # prepare_sft_data.py 產生的結構化資料
     sft_learning_rate: float = 5e-5         # 比預訓練的學習率小,避免破壞已經學到的語言能力
-    sft_max_iters: int = 300                # SFT 資料量通常較小,不需要跑太多步
-    sft_eval_interval: int = 50
+    sft_max_iters: int = 400                # 降低步數,減少對394筆資料重複學習的次數,緩解過擬合
+    sft_eval_interval: int = 100
 
     # ------- 推理 (inference) 參數 -------
     max_new_tokens: int = 300
-    temperature: float = 0.7       # 略微調低,讓生成結果不要太隨機發散
-    top_k: int = 50
-    top_p: float = 0.9             # 核採樣門檻,搭配 top_k 一起使用效果較好
-    repetition_penalty: float = 1.3  # 大於1.0會降低重複字詞出現的機率,避免像連續重複同一個符號
+    temperature: float = 0.5       # 再調低,讓生成結果更保守、更不容易亂跳
+    top_k: int = 40
+    top_p: float = 0.85             # 核採樣門檻,搭配 top_k 一起使用效果較好
+    repetition_penalty: float = 1.5  # 提高懲罰力道,更積極避免重複字詞
 
     # ------- 裝置 -------
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
