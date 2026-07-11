@@ -78,33 +78,6 @@
     .app { margin-left: 52px; }
   }
 
-  header {
-    padding: 28px 24px 16px;
-    border-bottom: 1px solid var(--panel-border);
-  }
-
-  header .eyebrow {
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-
-  header h1 {
-    font-family: var(--serif);
-    font-size: 26px;
-    font-weight: 600;
-    margin: 6px 0 4px;
-    letter-spacing: 0.02em;
-  }
-
-  header p {
-    margin: 0;
-    font-size: 13px;
-    color: var(--ink-dim);
-    line-height: 1.6;
-  }
-
   .messages {
     flex: 1;
     overflow-y: auto;
@@ -112,16 +85,6 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
-
-  .messages:empty::before {
-    content: "在下方輸入文字,按下送出,模型會接著你的話繼續說下去。";
-    color: var(--ink-dim);
-    font-size: 14px;
-    margin: auto;
-    text-align: center;
-    max-width: 320px;
-    line-height: 1.8;
   }
 
   .msg {
@@ -136,9 +99,14 @@
 
   .msg.user {
     align-self: flex-end;
-    background: var(--user-bubble);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(113, 112, 112, 0.2);
     color: var(--ink);
-    border-bottom-right-radius: 4px;
+    border: 1px solid var(--pill-border);
+    border-radius: 999px;
   }
 
   .msg.assistant {
@@ -146,6 +114,12 @@
     background: var(--panel);
     border: 1px solid var(--panel-border);
     border-bottom-left-radius: 4px;
+    font-family: 'Inter', var(--sans);
+    font-style: normal;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 18px;
+    color: #FFFFFF;
   }
 
   .msg.assistant .label {
@@ -197,6 +171,7 @@
     margin: 0 auto;
     padding: 16px 24px 24px;
     background: var(--bg);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Rectangle 12:圓角膠囊容器,寬度用100%取代原本固定771px,
@@ -208,21 +183,26 @@
     flex-direction: column;
     gap: 8px;
     width: 100%;
-    padding: 14px 17px 17px;
+    padding: 0;
     background: var(--pill-bg);
     border: 1px solid var(--pill-border);
     border-radius: 29px;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .composer-pill:focus-within {
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
 
   form.composer textarea {
     width: 100%;
     resize: none;
-    min-height: 24px;
+    min-height: 44px;
     max-height: 200px;
-    padding: 17px 0 0 17px;
+    padding: 22px 22px 0 22px;
     border: none;
     background: transparent;
     color: var(--ink);
@@ -245,9 +225,11 @@
      對齊方式完全比照設計稿(add / Arrow up 同高、Model 5 / Mic 同高,
      Ellipse 2 的圓心與其餘元件的中心線對齊) */
   .composer-toolbar {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0 17px 17px 17px;
   }
 
   .toolbar-right {
@@ -333,7 +315,6 @@
   }
 
   @media (max-width: 480px) {
-    header { padding: 20px 16px 14px; }
     .messages { padding: 16px; }
     form.composer { padding: 12px 16px 16px; }
     .model-tag { display: none; }
@@ -343,12 +324,6 @@
 <body>
   <div class="side-rail"></div>
   <div class="app">
-    <header>
-      <div class="eyebrow">本地訓練 · 字元級語言模型</div>
-      <h1>山中問答</h1>
-      <p>這裡的每一句回覆,都是 Python 訓練出來的小型模型即時生成的,不是查表得到的固定答案。</p>
-    </header>
-
     <div class="messages" id="messages"></div>
 
     <form class="composer" id="composer">
@@ -429,6 +404,36 @@
       return el;
     }
 
+    // 還沒有任何訊息時,把輸入框往上移到畫面偏中央的位置(比照設計稿 Rectangle 12),
+    // 送出第一則訊息後,再讓它滑動回到底部(比照設計稿 Rectangle 13)。
+    const CENTERED_VERTICAL_RATIO = 622 / 1440; // Rectangle 12 垂直中心 / 畫布高度
+
+    function centerComposerIfEmpty() {
+      if (messagesEl.children.length > 0) return;
+      form.style.transition = "none";
+      form.style.transform = "translateY(0px)";
+      const rect = form.getBoundingClientRect();
+      const currentCenterY = rect.top + rect.height / 2;
+      const targetCenterY = window.innerHeight * CENTERED_VERTICAL_RATIO;
+      const delta = targetCenterY - currentCenterY;
+      // 關鍵順序:transition 仍是 none 的狀態下先把 transform 套到最終位置,
+      // 這樣「跳到中間」這個動作本身不會被動畫包住,
+      // 強制 reflow 讓瀏覽器把這個瞬間跳動畫面畫出來之後,才把 transition 復原,
+      // 讓「復原 transition」這件事只影響之後(送出第一則訊息)的變化。
+      form.style.transform = `translateY(${delta}px)`;
+      void form.offsetHeight;
+      form.style.transition = "";
+    }
+
+    function slideComposerToBottom() {
+      form.style.transform = "translateY(0px)";
+    }
+
+    // 立刻同步執行(不等 load 事件),避免先在底部畫面停留一下才跳到中間、
+    // 看起來像多了一次「往上滑」的動作。使用者只會看到它一開始就在中間位置。
+    centerComposerIfEmpty();
+    window.addEventListener("resize", centerComposerIfEmpty);
+
     // Enter 送出,Shift+Enter 換行
     textarea.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -442,9 +447,15 @@
       const prompt = textarea.value.trim();
       if (!prompt) return;
 
+      const isFirstMessage = messagesEl.children.length === 0;
+
       addMessage(prompt, "user");
       textarea.value = "";
       sendBtn.disabled = true;
+
+      if (isFirstMessage) {
+        slideComposerToBottom();
+      }
 
       const loadingEl = addLoading();
 

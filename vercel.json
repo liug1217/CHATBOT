@@ -4,5 +4,8 @@
     "api/generate.py": {
       "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/CHATBOT.html" }
+  ]
 }
