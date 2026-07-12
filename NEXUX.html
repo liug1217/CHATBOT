@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link rel="icon" type="image/png" href="/NEXUX.png">
 <link rel="apple-touch-icon" href="/NEXUX.png">
 <title>NEXUX</title>
@@ -28,6 +28,8 @@
   html, body {
     margin: 0;
     height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     background: var(--bg);
     color: var(--ink);
     font-family: var(--sans);
@@ -373,6 +375,9 @@
   @media (max-width: 480px) {
     .messages { padding: 16px; }
     form.composer { padding: 12px 16px 30px; }
+    /* iOS 對 font-size 小於16px的輸入欄位,聚焦時會自動放大整個畫面,
+       這裡把手機上的輸入框字級調到16px,避免打字時畫面突然被放大。 */
+    form.composer textarea { font-size: 16px; }
   }
 </style>
 </head>
@@ -475,7 +480,7 @@
     // 把文字一個字一個字打進指定的訊息元素裡,固定節奏顯示,
     // 不管文字是一次到齊(Vercel 的 JSON 回應)還是分批到齊(本機串流),
     // 畫面上看起來都會是穩定的打字機效果。
-    function typeOutText(el, text, delayMs = 35) {
+    function typeOutText(el, text, delayMs = 12) {
       return new Promise((resolve) => {
         let i = 0;
         function step() {
@@ -623,7 +628,7 @@
               el.textContent = received;
               messagesEl.scrollTop = messagesEl.scrollHeight;
             }
-            await new Promise((r) => setTimeout(r, 35));
+            await new Promise((r) => setTimeout(r, 12));
           }
           await pump;
 
