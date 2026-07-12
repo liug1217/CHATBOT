@@ -55,8 +55,8 @@
     top: 0;
     bottom: 0;
     width: 52px;
-    background: rgba(255, 255, 255, 0.03);
-    border-right: 1px solid var(--panel-border);
+    background: rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(113, 112, 112, 0.2);
     z-index: 2;
   }
 
@@ -111,9 +111,10 @@
 
   .msg.assistant {
     align-self: flex-start;
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-bottom-left-radius: 4px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     font-family: 'Inter', var(--sans);
     font-style: normal;
     font-weight: 400;
@@ -169,9 +170,40 @@
     max-width: 100%;
     box-sizing: border-box;
     margin: 0 auto;
-    padding: 16px 24px 24px;
+    padding: 16px 24px 30px;
     background: var(--bg);
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Rectangle 14/23/24/25/26:輸入框上方的快速提示按鈕列,
+     只在還沒開始對話(輸入框置中)時顯示,送出第一則訊息後跟著輸入框一起隱藏。 */
+  .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 30px;
+    transition: opacity 0.3s ease;
+  }
+
+  .quick-actions button {
+    width: 100px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 1px solid var(--pill-border);
+    border-radius: 19.5px;
+    background: rgba(113, 112, 112, 0.2);
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    color: #FFFFFF;
+    font-family: 'Inter', var(--sans);
+    font-style: normal;
+    font-weight: 400;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .quick-actions button:hover {
+    background: rgba(113, 112, 112, 0.35);
   }
 
   /* Rectangle 12:圓角膠囊容器,寬度用100%取代原本固定771px,
@@ -194,6 +226,21 @@
 
   .composer-pill:focus-within {
     border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .composer-disclaimer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    margin: 0;
+    text-align: center;
+    font-family: 'Inter', var(--sans);
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    color: #B6B6B6;
   }
 
 
@@ -316,7 +363,7 @@
 
   @media (max-width: 480px) {
     .messages { padding: 16px; }
-    form.composer { padding: 12px 16px 16px; }
+    form.composer { padding: 12px 16px 30px; }
     .model-tag { display: none; }
   }
 </style>
@@ -369,7 +416,17 @@
           </div>
         </div>
       </div>
+
+      <div class="quick-actions" id="quickActions">
+        <button type="button" data-prompt="從前有一座山">聊天</button>
+        <button type="button" data-prompt="說一個從前有一座山的故事">故事</button>
+        <button type="button" data-prompt="用 Python 寫一個計算兩個數字總和的函式">Python</button>
+        <button type="button" data-prompt="寫一個最基本的網頁結構">HTML</button>
+        <button type="button" data-prompt="什麼是人工智慧?">問答</button>
+      </div>
     </form>
+
+    <p class="composer-disclaimer">本AI可能會出錯,請使用者謹慎使用。</p>
   </div>
 
   <script>
@@ -377,6 +434,15 @@
     const form = document.getElementById("composer");
     const textarea = document.getElementById("prompt");
     const sendBtn = document.getElementById("sendBtn");
+    const quickActions = document.getElementById("quickActions");
+
+    // 點快速提示按鈕,直接把範例文字填進輸入框並聚焦,不自動送出
+    quickActions.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-prompt]");
+      if (!btn) return;
+      textarea.value = btn.dataset.prompt;
+      textarea.focus();
+    });
 
     function addMessage(text, role) {
       const el = document.createElement("div");
@@ -406,7 +472,7 @@
 
     // 還沒有任何訊息時,把輸入框往上移到畫面偏中央的位置(比照設計稿 Rectangle 12),
     // 送出第一則訊息後,再讓它滑動回到底部(比照設計稿 Rectangle 13)。
-    const CENTERED_VERTICAL_RATIO = 622 / 1440; // Rectangle 12 垂直中心 / 畫布高度
+    const CENTERED_VERTICAL_RATIO = 720 / 1440; // Rectangle 12 垂直中心 / 畫布高度(top:655 之後剛好是畫面正中央)
 
     function centerComposerIfEmpty() {
       if (messagesEl.children.length > 0) return;
@@ -427,6 +493,12 @@
 
     function slideComposerToBottom() {
       form.style.transform = "translateY(0px)";
+      // 快速提示按鈕只在還沒開始對話時出現,送出第一則訊息後淡出並收起,
+      // 讓輸入框上方不會留下多餘的空白區域。
+      quickActions.style.opacity = "0";
+      setTimeout(() => {
+        quickActions.style.display = "none";
+      }, 300);
     }
 
     // 立刻同步執行(不等 load 事件),避免先在底部畫面停留一下才跳到中間、
