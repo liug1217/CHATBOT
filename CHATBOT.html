@@ -123,46 +123,12 @@
     color: #FFFFFF;
   }
 
-  .msg.assistant .label {
-    display: block;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    color: var(--accent);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-  }
-
   .msg.error {
     align-self: flex-start;
     background: transparent;
     border: 1px solid var(--error);
     color: var(--error);
     font-size: 13px;
-  }
-
-  .msg.loading {
-    align-self: flex-start;
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    color: var(--ink-dim);
-    font-size: 14px;
-  }
-
-  .dots span {
-    display: inline-block;
-    width: 5px;
-    height: 5px;
-    margin-right: 3px;
-    border-radius: 50%;
-    background: var(--ink-dim);
-    animation: blink 1.2s infinite ease-in-out;
-  }
-  .dots span:nth-child(2) { animation-delay: 0.2s; }
-  .dots span:nth-child(3) { animation-delay: 0.4s; }
-
-  @keyframes blink {
-    0%, 80%, 100% { opacity: 0.25; }
-    40% { opacity: 1; }
   }
 
   form.composer {
@@ -464,27 +430,33 @@
     function addMessage(text, role) {
       const el = document.createElement("div");
       el.className = "msg " + role;
-      if (role === "assistant") {
-        const label = document.createElement("span");
-        label.className = "label";
-        label.textContent = "模型生成";
-        el.appendChild(label);
-        el.appendChild(document.createTextNode(text));
-      } else {
-        el.textContent = text;
-      }
+      el.textContent = text;
       messagesEl.appendChild(el);
       messagesEl.scrollTop = messagesEl.scrollHeight;
       return el;
     }
 
-    function addLoading() {
+    // 逐字把回覆的文字打出來,製造打字機效果
+    function addTypingMessage(text, role) {
       const el = document.createElement("div");
-      el.className = "msg loading";
-      el.innerHTML = '生成中 <span class="dots"><span></span><span></span><span></span></span>';
+      el.className = "msg " + role;
       messagesEl.appendChild(el);
       messagesEl.scrollTop = messagesEl.scrollHeight;
-      return el;
+
+      return new Promise((resolve) => {
+        let i = 0;
+        function typeNext() {
+          if (i < text.length) {
+            el.textContent += text[i];
+            i++;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            setTimeout(typeNext, 25);
+          } else {
+            resolve(el);
+          }
+        }
+        typeNext();
+      });
     }
 
     // 還沒有任何訊息時,把輸入框往上移到畫面偏中央的位置(比照設計稿 Rectangle 12),
@@ -550,8 +522,6 @@
         slideComposerToBottom();
       }
 
-      const loadingEl = addLoading();
-
       try {
         const res = await fetch("/api/generate", {
           method: "POST",
@@ -560,15 +530,12 @@
         });
         const data = await res.json();
 
-        loadingEl.remove();
-
         if (!res.ok || data.error) {
           addMessage(data.error || "發生未知錯誤,請稍後再試。", "error");
         } else {
-          addMessage(data.reply || "(模型沒有生成任何內容)", "assistant");
+          await addTypingMessage(data.reply || "(模型沒有生成任何內容)", "assistant");
         }
       } catch (err) {
-        loadingEl.remove();
         addMessage("無法連線到伺服器,請確認 server.py 是否正在執行。", "error");
       } finally {
         sendBtn.disabled = false;
