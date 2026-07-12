@@ -81,12 +81,19 @@
   .messages {
     position: relative;
     z-index: 2;
+    /* 容器本身「點擊穿透」,避免空白區域擋住視覺上疊在下面的輸入框按鈕,
+       實際的訊息泡泡再用 pointer-events:auto 復原成可以互動。 */
+    pointer-events: none;
     flex: 1;
     overflow-y: auto;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+
+  .messages .msg {
+    pointer-events: auto;
   }
 
   .msg {
