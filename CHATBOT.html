@@ -175,6 +175,20 @@
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* 想好怎麼準備了嗎?我本都很期待呢!:輸入框正上方的標題文字,
+     只在還沒開始對話(輸入框置中)時顯示,送出第一則訊息後跟著輸入框一起淡出。 */
+  .composer-heading {
+    margin: 0 0 20px;
+    text-align: center;
+    font-family: 'Inter', var(--sans);
+    font-style: normal;
+    font-weight: 400;
+    font-size: 25px;
+    line-height: 30px;
+    color: #FFFFFF;
+    transition: opacity 0.3s ease;
+  }
+
   /* Rectangle 14/23/24/25/26:輸入框上方的快速提示按鈕列,
      只在還沒開始對話(輸入框置中)時顯示,送出第一則訊息後跟著輸入框一起隱藏。 */
   .quick-actions {
@@ -374,6 +388,8 @@
     <div class="messages" id="messages"></div>
 
     <form class="composer" id="composer">
+      <p class="composer-heading" id="composerHeading">想好怎麼準備了嗎 ? 我本都很期待呢 !</p>
+
       <div class="composer-pill">
         <textarea
           id="prompt"
@@ -435,6 +451,7 @@
     const textarea = document.getElementById("prompt");
     const sendBtn = document.getElementById("sendBtn");
     const quickActions = document.getElementById("quickActions");
+    const composerHeading = document.getElementById("composerHeading");
 
     // 點快速提示按鈕,直接把範例文字填進輸入框並聚焦,不自動送出
     quickActions.addEventListener("click", (e) => {
@@ -495,10 +512,12 @@
 
     function slideComposerToBottom() {
       form.style.transform = "translateY(0px)";
-      // 快速提示按鈕只在還沒開始對話時出現,送出第一則訊息後淡出並收起,
+      // 標題文字和快速提示按鈕只在還沒開始對話時出現,送出第一則訊息後淡出並收起,
       // 讓輸入框上方不會留下多餘的空白區域。
+      composerHeading.style.opacity = "0";
       quickActions.style.opacity = "0";
       setTimeout(() => {
+        composerHeading.style.display = "none";
         quickActions.style.display = "none";
       }, 300);
     }
