@@ -450,6 +450,26 @@
       return el;
     }
 
+    // 把文字一個字一個字打進指定的訊息元素裡,固定節奏顯示,
+    // 不管文字是一次到齊(Vercel 的 JSON 回應)還是分批到齊(本機串流),
+    // 畫面上看起來都會是穩定的打字機效果。
+    function typeOutText(el, text, delayMs = 35) {
+      return new Promise((resolve) => {
+        let i = 0;
+        function step() {
+          if (i < text.length) {
+            el.textContent += text[i];
+            i++;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            setTimeout(step, delayMs);
+          } else {
+            resolve();
+          }
+        }
+        step();
+      });
+    }
+
     // 還沒有任何訊息時,把輸入框往上移到畫面偏中央的位置(比照設計稿 Rectangle 12),
     // 送出第一則訊息後,再讓它滑動回到底部(比照設計稿 Rectangle 13)。
     const CENTERED_VERTICAL_RATIO = 720 / 1440; // Rectangle 12 垂直中心 / 畫布高度(top:655 之後剛好是畫面正中央)
@@ -538,18 +558,23 @@
         if (contentType.includes("application/json")) {
           // 非串流:一次拿到完整 JSON 回應(Vercel 上的 api/generate.py 走這條路,
           // 不管成功或失敗都會是 JSON,要看 res.ok / data.error 才能判斷是不是錯誤,
-          // 不能只看「是不是 JSON」就當成錯誤)。
+          // 不能只看「是不是 JSON」就當成錯誤)。因為是一次到齊,
+          // 額外用 typeOutText 補上打字機效果,不然文字會整段瞬間跳出來。
           const data = await res.json();
           if (!res.ok || data.error) {
             addMessage(data.error || "發生未知錯誤,請稍後再試。", "error");
           } else {
-            addMessage(data.reply || "(模型沒有生成任何內容)", "assistant");
+            const el = document.createElement("div");
+            el.className = "msg assistant";
+            messagesEl.appendChild(el);
+            await typeOutText(el, data.reply || "(模型沒有生成任何內容)");
           }
         } else if (!res.ok) {
           addMessage("發生未知錯誤,請稍後再試。", "error");
         } else {
-          // 串流讀取:伺服器每生成一個字就傳一個字過來,邊收邊顯示,
-          // 不用等整段回覆生成完才看到文字。
+          // 串流讀取:背景持續收伺服器傳來的字,存進 queue,
+          // 另外用固定節奏把 queue 裡的字吐出來顯示,這樣不管網路/伺服器那邊
+          // 是一次送一大包還是一個字一個字送,畫面上都會是穩定的打字機效果。
           const el = document.createElement("div");
           el.className = "msg assistant";
           messagesEl.appendChild(el);
@@ -557,15 +582,28 @@
 
           const reader = res.body.getReader();
           const decoder = new TextDecoder("utf-8");
-          let received = "";
+          const queue = [];
+          let streamDone = false;
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            received += decoder.decode(value, { stream: true });
-            el.textContent = received;
-            messagesEl.scrollTop = messagesEl.scrollHeight;
+          const pump = (async () => {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              queue.push(...decoder.decode(value, { stream: true }));
+            }
+            streamDone = true;
+          })();
+
+          let received = "";
+          while (!streamDone || queue.length > 0) {
+            if (queue.length > 0) {
+              received += queue.shift();
+              el.textContent = received;
+              messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+            await new Promise((r) => setTimeout(r, 35));
           }
+          await pump;
 
           if (!received.trim()) {
             el.textContent = "(模型沒有生成任何內容)";
