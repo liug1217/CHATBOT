@@ -18,19 +18,19 @@ class Config:
 
     # ------- 資料切分 -------
     train_split: float = 0.9   # 90% 訓練 / 10% 驗證
-    block_size: int = 96      # 模型一次看多長的文字(context length)
+    block_size: int = 160      # 模型一次看多長的文字(context length),加大讓長一點的問答不會斷了上下文
 
     # ------- 模型架構 -------
-    n_embd: int = 128       # embedding 維度
-    n_head: int = 8        # attention head 數量
-    n_layer: int = 6        # transformer block 層數
+    n_embd: int = 192       # embedding 維度,加大以提升語意表達能力
+    n_head: int = 8        # attention head 數量(192 / 8 = 24 維/head)
+    n_layer: int = 8        # transformer block 層數,加深以學習更複雜的規律
     dropout: float = 0.1
 
     # ------- 訓練超參數 -------
     batch_size: int = 32
     learning_rate: float = 3e-4
     min_learning_rate: float = 3e-5   # cosine 衰減後的最低學習率
-    warmup_iters: int = 150           # 前 N 步線性 warmup,避免一開始梯度過大
+    warmup_iters: int = 200           # 前 N 步線性 warmup,避免一開始梯度過大
     max_iters: int = 4000
     weight_decay: float = 0.01        # AdamW 的權重衰減,抑制過擬合
     grad_clip: float = 1.0            # 梯度裁剪上限,避免梯度爆炸(0 表示不裁剪)
@@ -47,14 +47,14 @@ class Config:
     # 而不是像純接龍一樣不分青紅皂白地接續所有文字。
     sft_data_path: str = "sft_data.jsonl"   # prepare_sft_data.py 產生的結構化資料
     sft_learning_rate: float = 5e-5         # 比預訓練的學習率小,避免破壞已經學到的語言能力
-    sft_max_iters: int = 400                # 降低步數,減少對394筆資料重複學習的次數,緩解過擬合
-    sft_eval_interval: int = 100
+    sft_max_iters: int = 900                # 資料量從394筆增加到890筆,依相近比例調高步數,同時避免過擬合
+    sft_eval_interval: int = 150
 
     # ------- 推理 (inference) 參數 -------
     max_new_tokens: int = 300
-    temperature: float = 0.5       # 再調低,讓生成結果更保守、更不容易亂跳
-    top_k: int = 40
-    top_p: float = 0.85             # 核採樣門檻,搭配 top_k 一起使用效果較好
+    temperature: float = 0.4       # 再調低,讓生成結果更保守、更不容易亂跳
+    top_k: int = 30
+    top_p: float = 0.8             # 核採樣門檻,搭配 top_k 一起使用效果較好
     repetition_penalty: float = 1.5  # 提高懲罰力道,更積極避免重複字詞
 
     # ------- 裝置 -------
