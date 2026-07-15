@@ -74,10 +74,11 @@
   .messages {
     position: relative;
     z-index: 2;
-    /* 輸入框(form.composer)的 z-index 比這裡高,兩者視覺重疊時
-       輸入框一定在最上層可以點擊,所以這裡不需要再用 pointer-events:none
-       讓滑鼠穿透——之前這樣做會連滾輪滾動的手勢也一起被擋掉,
-       滑到訊息之間的空白處就完全滾不動。 */
+    /* 一開始(還沒有任何訊息、輸入框置中)這裡會視覺上跟輸入框重疊,
+       用「滑鼠穿透」避免空白區域擋住輸入框按鈕。送出第一則訊息、
+       輸入框滑到底部後,兩者不再重疊,JS(slideComposerToBottom)
+       會把這裡改回 pointer-events:auto,滾動才能正常運作。 */
+    pointer-events: none;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
@@ -85,6 +86,13 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    /* 隱藏捲軸但保留可以滾動的功能 */
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* 舊版 Edge / IE */
+  }
+
+  .messages::-webkit-scrollbar {
+    display: none;              /* Chrome / Safari / 新版 Edge */
   }
 
   .msg {
@@ -140,8 +148,6 @@
     box-sizing: border-box;
     margin: 0 auto;
     padding: 16px 0 30px;
-    position: relative;
-    z-index: 3;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -536,6 +542,9 @@
 
     function slideComposerToBottom() {
       form.style.transform = "translateY(0px)";
+      // 輸入框已經滑到底部,跟訊息區不會再視覺重疊,不需要再讓訊息區
+      // 滑鼠穿透,改回 auto 讓滾輪/觸控可以正常在訊息區滾動。
+      messagesEl.style.pointerEvents = "auto";
       // 標題文字和快速提示按鈕只在還沒開始對話時出現,送出第一則訊息後
       // 平滑收合(透明度 + 高度 + margin 一起動畫),避免版面高度瞬間跳動造成畫面抖動。
       composerHeading.style.opacity = "0";
