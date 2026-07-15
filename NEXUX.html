@@ -118,6 +118,9 @@
     line-height: 18px;
     border: 1px solid var(--pill-border);
     border-radius: 22px;
+    /* .messages 容器左右各有 24px padding,但設計稿裡送出的訊息泡泡
+       右邊界要跟輸入框右邊界切齊,用負邊距抵銷掉這裡多出來的 24px。 */
+    margin-right: -24px;
   }
 
   .msg.assistant {
