@@ -135,6 +135,9 @@
     font-size: 15px;
     line-height: 18px;
     color: #FFFFFF;
+    /* 跟 .msg.user 同樣的道理:.messages 容器左邊有24px padding,
+       但設計稿裡AI回覆文字的左邊界要跟輸入框左邊界切齊,用負邊距抵銷。 */
+    margin-left: -24px;
   }
 
   .msg.error {
