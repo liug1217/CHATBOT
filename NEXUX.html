@@ -378,10 +378,6 @@
   .send-btn:hover { opacity: 0.85; }
   .send-btn:active { transform: scale(0.95); }
 
-  .send-btn:disabled {
-    cursor: not-allowed;
-  }
-
   .add-btn:focus,
   .mic-btn:focus,
   .send-btn:focus,
@@ -486,6 +482,10 @@
     // 能看到之前聊過什麼(例如「我叫小明」->「我叫什麼?」),重新整理頁面就會清空。
     const conversationHistory = [];
 
+    // 生成中時,送出按鈕會變成停止圖示,再按一次會中止目前的生成
+    // (透過 AbortController 取消 fetch),已經吐出來的文字會保留不會消失。
+    let activeAbortController = null;
+
     const messagesEl = document.getElementById("messages");
     const form = document.getElementById("composer");
     const textarea = document.getElementById("prompt");
@@ -514,10 +514,16 @@
     // 把文字一個字一個字打進指定的訊息元素裡,固定節奏顯示,
     // 不管文字是一次到齊(Vercel 的 JSON 回應)還是分批到齊(本機串流),
     // 畫面上看起來都會是穩定的打字機效果。
-    function typeOutText(el, text, delayMs = 12) {
+    function typeOutText(el, text, delayMs = 12, signal = null) {
       return new Promise((resolve) => {
         let i = 0;
         function step() {
+          // 打字動畫進行中被按下停止,直接顯示目前已經打出來的部分就好,
+          // 不用把剩下的文字硬吐完。
+          if (signal && signal.aborted) {
+            resolve();
+            return;
+          }
           if (i < text.length) {
             el.textContent += text[i];
             i++;
@@ -597,6 +603,14 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      // 生成中(送出按鈕顯示停止圖示)再按一次,代表要中止目前的生成,
+      // 而不是送出新訊息。
+      if (activeAbortController) {
+        activeAbortController.abort();
+        return;
+      }
+
       const prompt = textarea.value.trim();
       if (!prompt) return;
 
@@ -609,8 +623,9 @@
       addMessage(prompt, "user");
       conversationHistory.push({ role: "user", text: prompt });
       textarea.value = "";
-      sendBtn.disabled = true;
       sendBtn.classList.add("generating");
+      sendBtn.setAttribute("aria-label", "停止生成");
+      activeAbortController = new AbortController();
 
       if (isFirstMessage) {
         slideComposerToBottom();
@@ -625,6 +640,7 @@
             provider: providerSelect.value,
             history: historyForRequest,
           }),
+          signal: activeAbortController.signal,
         });
 
         const contentType = res.headers.get("content-type") || "";
@@ -642,7 +658,7 @@
             el.className = "msg assistant";
             messagesEl.appendChild(el);
             const replyText = data.reply || "(模型沒有生成任何內容)";
-            await typeOutText(el, replyText);
+            await typeOutText(el, replyText, 12, activeAbortController.signal);
             conversationHistory.push({ role: "assistant", text: replyText });
           }
         } else if (!res.ok) {
@@ -662,12 +678,20 @@
           let streamDone = false;
 
           const pump = (async () => {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              queue.push(...decoder.decode(value, { stream: true }));
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                queue.push(...decoder.decode(value, { stream: true }));
+              }
+            } catch (err) {
+              // 使用者按下停止中止了 fetch,忽略這個例外,讓下面的迴圈
+              // 用 streamDone(在 finally 裡一定會設成 true)自然結束,
+              // 已經吐出來的文字(queue 裡還沒顯示完的部分)會照常顯示。
+              if (err.name !== "AbortError") throw err;
+            } finally {
+              streamDone = true;
             }
-            streamDone = true;
           })();
 
           let received = "";
@@ -688,10 +712,14 @@
           }
         }
       } catch (err) {
-        addMessage("無法連線到伺服器,請確認 server.py 是否正在執行。", "error");
+        // AbortError 是使用者主動按下停止造成的,不用當成連線錯誤顯示。
+        if (err.name !== "AbortError") {
+          addMessage("無法連線到伺服器,請確認 server.py 是否正在執行。", "error");
+        }
       } finally {
-        sendBtn.disabled = false;
         sendBtn.classList.remove("generating");
+        sendBtn.setAttribute("aria-label", "送出");
+        activeAbortController = null;
         textarea.focus();
       }
     });
