@@ -359,6 +359,19 @@
     transition: opacity 0.15s ease, transform 0.1s ease;
   }
 
+  /* Rectangle 27:AI 生成回覆的過程中,送出按鈕改顯示這個黑色方形,
+     取代原本的向上箭頭,提示使用者目前正在生成中。 */
+  .send-icon-stop {
+    display: none;
+    width: 12px;
+    height: 12px;
+    background: #000000;
+    border-radius: 1px;
+  }
+
+  .send-btn.generating .send-icon-arrow { display: none; }
+  .send-btn.generating .send-icon-stop { display: block; }
+
   .add-btn:hover,
   .mic-btn:hover { opacity: 0.75; }
 
@@ -447,9 +460,11 @@
 
             <!-- Ellipse 2(36x36 白底圓)+ Arrow up(24x24,內縮20.83%/20.83%,2.5px黑色線條) -->
             <button type="submit" class="send-btn" id="sendBtn" aria-label="送出">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg class="send-icon-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 19V5M19 12L12 5L5 12" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
+              <!-- Rectangle 27:12x12 黑色方形,AI 生成中顯示,取代箭頭圖示 -->
+              <span class="send-icon-stop" aria-hidden="true"></span>
             </button>
           </div>
         </div>
@@ -596,6 +611,7 @@
       conversationHistory.push({ role: "user", text: prompt });
       textarea.value = "";
       sendBtn.disabled = true;
+      sendBtn.classList.add("generating");
 
       if (isFirstMessage) {
         slideComposerToBottom();
@@ -676,6 +692,7 @@
         addMessage("無法連線到伺服器,請確認 server.py 是否正在執行。", "error");
       } finally {
         sendBtn.disabled = false;
+        sendBtn.classList.remove("generating");
         textarea.focus();
       }
     });
