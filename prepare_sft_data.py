@@ -1,8 +1,9 @@
 """
 prepare_sft_data.py
 --------------------
-把 qa.txt(問:.../答:...)和 chat.txt(A:.../B:...)這種已經有明確
-「一問一答」結構的語料,解析成結構化的 JSONL 格式,存成 sft_data.jsonl。
+把 qa.txt(問:.../答:...)、chat.txt(A:.../B:...)和 greeting.txt
+(成對的問候句)這幾種已經有明確「一問一答」結構的語料,解析成結構化的
+JSONL 格式,存成 sft_data.jsonl。
 
 每一行 JSONL 都是一筆 {"input": "...", "output": "..."} 的資料,
 input 是「問題/上下文」,output 是「該學會生成的回答」。
@@ -59,12 +60,36 @@ def parse_chat_file(path: str) -> list[dict]:
     return pairs
 
 
+def parse_greeting_file(path: str) -> list[dict]:
+    """
+    解析 greeting.txt:沒有『A:』『B:』這種前綴,單純是「一行問候/開場白,
+    下一行回應」兩兩成對排列。用「問:/答:」包裝,跟 qa.txt 用同一種格式,
+    因為 server.py / inference.py 實際跟使用者對話時,固定就是用
+    「問:{使用者輸入}\n答:」這個格式包住 prompt,所以訓練資料的包裝
+    格式也要跟推理時用的格式一致,模型才學得到「看到哈囉,該怎麼回」。
+    """
+    pairs = []
+    with open(path, "r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f.readlines() if line.strip()]
+
+    for i in range(0, len(lines) - 1, 2):
+        prompt_line = lines[i]
+        reply_line = lines[i + 1]
+        if prompt_line and reply_line:
+            pairs.append({
+                "input": f"問:{prompt_line}\n答:",
+                "output": reply_line,
+            })
+    return pairs
+
+
 def main():
     config = Config()
     all_pairs = []
 
     qa_path = "data/qa.txt"
     chat_path = "data/chat.txt"
+    greeting_path = "data/greeting.txt"
 
     try:
         qa_pairs = parse_qa_file(qa_path)
@@ -80,10 +105,17 @@ def main():
     except FileNotFoundError:
         print(f"[prepare_sft_data] 找不到 {chat_path},略過")
 
+    try:
+        greeting_pairs = parse_greeting_file(greeting_path)
+        all_pairs.extend(greeting_pairs)
+        print(f"[prepare_sft_data] 從 {greeting_path} 解析出 {len(greeting_pairs)} 筆問候資料")
+    except FileNotFoundError:
+        print(f"[prepare_sft_data] 找不到 {greeting_path},略過")
+
     if not all_pairs:
         raise ValueError(
-            "沒有解析出任何資料,請確認 data/qa.txt 和 data/chat.txt 的格式"
-            "是否符合『問:...\\n答:...』或『A:...\\nB:...』的格式。"
+            "沒有解析出任何資料,請確認 data/qa.txt、data/chat.txt、data/greeting.txt 的格式"
+            "是否符合『問:...\\n答:...』、『A:...\\nB:...』或成對的問候句格式。"
         )
 
     output_path = config.sft_data_path

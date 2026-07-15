@@ -52,7 +52,7 @@ class Config:
     sft_eval_interval: int = 150
 
     # ------- 推理 (inference) 參數 -------
-    max_new_tokens: int = 300
+    max_new_tokens: int = 80   # 縮短生成長度,避免回完問題後模型繼續自由接龍出下一輪假對話
     temperature: float = 0.4       # 再調低,讓生成結果更保守、更不容易亂跳
     top_k: int = 30
     top_p: float = 0.8             # 核採樣門檻,搭配 top_k 一起使用效果較好
