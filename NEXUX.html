@@ -165,6 +165,8 @@
     line-height: 72px;
     color: #FFFFFF;
     font-variant-numeric: tabular-nums;
+    /* 數字從框的中間往外對齊,不是靠左排列。 */
+    text-align: center;
   }
 
   /* Rectangle 30:12/24小時制的垂直滑動開關,拿掉整張卡片可點的做法,
@@ -634,10 +636,10 @@
       display.className = "time-card-display";
       card.appendChild(display);
 
-      // 垂直滑動開關:只有這個開關能點,不是整張卡片。
+      // 垂直滑動開關:只有這個開關能點/拖曳,不是整張卡片。
       const switchEl = document.createElement("div");
       switchEl.className = "time-card-switch";
-      switchEl.title = "點一下切換 12 / 24 小時制";
+      switchEl.title = "點一下或拖曳切換 12 / 24 小時制";
       const thumb = document.createElement("div");
       thumb.className = "time-card-switch-thumb";
       switchEl.appendChild(thumb);
@@ -672,11 +674,45 @@
       tick();
       setInterval(tick, 1000);
 
-      switchEl.addEventListener("click", () => {
-        use24Hour = !use24Hour;
+      // 滑塊可以直接拖曳,放開時依最後停的位置吸附到12/24小時制;
+      // 單純點一下(沒有拖曳位移)效果等同直接觸發一次吸附判斷,
+      // 所以不需要另外寫一個點擊事件。
+      const THUMB_TOP_MIN = 1;   // 12小時制(靠上)
+      const THUMB_TOP_MAX = 31;  // 24小時制(靠下)
+      const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+      let dragging = false;
+      let trackTop = 0;
+
+      function onPointerDown(e) {
+        dragging = true;
+        trackTop = switchEl.getBoundingClientRect().top;
+        thumb.style.transition = "none";
+        switchEl.setPointerCapture(e.pointerId);
+        onPointerMove(e);
+      }
+
+      function onPointerMove(e) {
+        if (!dragging) return;
+        const y = e.clientY - trackTop - thumb.offsetHeight / 2;
+        thumb.style.top = `${clamp(y, THUMB_TOP_MIN, THUMB_TOP_MAX)}px`;
+      }
+
+      function onPointerUp() {
+        if (!dragging) return;
+        dragging = false;
+        const droppedTop = parseFloat(thumb.style.top || THUMB_TOP_MIN);
+        thumb.style.transition = "";
+        thumb.style.top = "";
+        use24Hour = droppedTop > (THUMB_TOP_MIN + THUMB_TOP_MAX) / 2;
         render();
         tick();
-      });
+      }
+
+      switchEl.addEventListener("pointerdown", onPointerDown);
+      switchEl.addEventListener("pointermove", onPointerMove);
+      switchEl.addEventListener("pointerup", onPointerUp);
+      switchEl.addEventListener("pointercancel", onPointerUp);
 
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
