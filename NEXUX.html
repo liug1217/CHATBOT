@@ -153,6 +153,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    user-select: none;
   }
 
   .time-card-display {
@@ -577,18 +579,33 @@
     function renderTimeCard() {
       const card = document.createElement("div");
       card.className = "time-card";
+      card.title = "點一下切換 12 / 24 小時制";
       const display = document.createElement("span");
       display.className = "time-card-display";
       card.appendChild(display);
       messagesEl.appendChild(card);
 
+      // 預設 12 小時制,點卡片切換成 24 小時制,再點一次切回去。
+      let use24Hour = false;
+      const pad = (n) => String(n).padStart(2, "0");
+
       function tick() {
         const now = new Date();
-        const pad = (n) => String(n).padStart(2, "0");
-        display.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const seconds = pad(now.getSeconds());
+        if (use24Hour) {
+          display.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${seconds}`;
+        } else {
+          const hour12 = now.getHours() % 12 || 12;
+          display.textContent = `${pad(hour12)}:${pad(now.getMinutes())}:${seconds}`;
+        }
       }
       tick();
       setInterval(tick, 1000);
+
+      card.addEventListener("click", () => {
+        use24Hour = !use24Hour;
+        tick();
+      });
 
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
@@ -719,6 +736,21 @@
             const replyText = data.reply || "(模型沒有生成任何內容)";
             await typeOutText(el, replyText, 12, activeAbortController.signal);
             conversationHistory.push({ role: "assistant", text: replyText });
+
+            // 時間類回覆也預設12小時制文字(伺服器已經是這樣寫的),
+            // 點一下切換成24小時制的數字時間,再點一次切回原本的文字。
+            if (data.type === "time") {
+              const pad = (n) => String(n).padStart(2, "0");
+              const now = new Date();
+              const text24 = `現在是${pad(now.getHours())}:${pad(now.getMinutes())}。`;
+              let showing24 = false;
+              el.style.cursor = "pointer";
+              el.title = "點一下切換 12 / 24 小時制";
+              el.addEventListener("click", () => {
+                showing24 = !showing24;
+                el.textContent = showing24 ? text24 : replyText;
+              });
+            }
           }
         } else if (!res.ok) {
           addMessage("發生未知錯誤,請稍後再試。", "error");
